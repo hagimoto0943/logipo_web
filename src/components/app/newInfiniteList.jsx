@@ -18,12 +18,14 @@ export default function newInfiniteList({ getList, ItemComponent, limit=30, ...p
       setItems(prevItems => [...prevItems, ...list])
       offsetRef.current += list.length
       setHasMore(!!res.hasMore)
-    } finally {
+    } finally {                                                                         
       setLoading(false)
     }
   }, [getList, limit, loading, hasMore])
 
-  useEffect(() => loadMore(), [])
+  useEffect(() => {
+    loadMore()
+  }, [])
 
   useEffect(() => {
     const root = containerRef.current
@@ -41,7 +43,7 @@ export default function newInfiniteList({ getList, ItemComponent, limit=30, ...p
   }, [loadMore, hasMore, loading])
 
   const render = (
-    <div ref={containerRef} style={{ overflowY:'auto', height:'100%' }} {...containerProps}>
+    <div ref={containerRef} style={{ overflowY:'auto', height:'100%' }} {...props}>
       {items.map((item, i) => <ItemComponent key={item.id ?? i} item={item} />)}
       <div ref={sentinelRef} style={{ height: 1 }} />
       {loading && <div style={{ padding: 8 }}>読み込み中...</div>}
