@@ -4,6 +4,8 @@ import { ContentListSidebar } from "@components/app/ContentListSidebar";
 import { SidebarProvider } from "@components/ui/sidebar"
 import ReviewApi from "@api/base/review";
 import InteractiveTextHighlight from "@components/app/InteractiveTextHighlight";
+import { StructureKindBadge } from "@components/app/StructureKindBadge";
+import { ScoreAnalysisChart } from "@components/app/ScoreAnalysisChart";
 
 export default function ReviewDetail() {
   const { id } = useParams();
@@ -34,21 +36,19 @@ export default function ReviewDetail() {
 
   return (
     <SidebarProvider>
-      <div className="flex flex-row">
-        <div className="container mx-auto px-4 py-8 flex-1">
+      <div className="flex flex-row w-full">
+        <div className="container lg:mx-8 px-4 py-8 flex-1">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-4">{review.title}</h1>
+            <h1 className="text-xl font-semibold text-stone-700 mb-4">{review.title}</h1>
             <div className="flex items-center gap-4 mb-6">
-              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                {review.structure_kind?.toUpperCase()}
-              </span>
+              <StructureKindBadge structureKind={review?.structure_kind} size="text-xs" />
               <span className="text-sm text-gray-500">
                 {new Date(review.created_at).toLocaleString()}
               </span>
             </div>
             
             <div className="bg-gray-50 p-6 rounded-lg mb-6">
-              <h2 className="text-xl font-semibold mb-4">原文</h2>
+              <h2 className="text-md font-semibold text-stone-600 mb-4">添削した文章</h2>
               <InteractiveTextHighlight 
                 originalText={review.original_text}
                 structureAnalysis={review.result?.structure_analysis}
@@ -76,21 +76,18 @@ export default function ReviewDetail() {
                 {review.result.score_analysis && (
                   <div>
                     <h3 className="text-lg font-medium mb-2">スコア分析</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {Object.entries(review.result.score_analysis.score).map(([key, value]) => (
-                        <div key={key} className="bg-gray-50 p-3 rounded text-center">
-                          <div className="text-sm text-gray-600 capitalize">{key}</div>
-                          <div className="text-2xl font-bold text-blue-600">{value}/5</div>
-                        </div>
-                      ))}
-                    </div>
+                    <ScoreAnalysisChart scores={review.result.score_analysis?.score} title="文章力総合分析 (Comprehensive Writing Analysis)" description="このチャートは、文章を「構成力」「論理性」「具体性」「明瞭性」の4つの観点から分析し、スコア化したものです。
+各観点は、読者に伝わりやすく、説得力のある文章を書くために重要な要素です。
+チャートを活用することで、自分の文章の強みや改善点を直感的に把握できます。" />
                   </div>
                 )}
               </div>
             )}
           </div>
         </div>
-        <ContentListSidebar side={"right"} />
+        <div className="flex-shrink-0">
+          <ContentListSidebar side={"right"} />
+        </div>
       </div>
     </SidebarProvider>
   );

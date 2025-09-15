@@ -26,7 +26,10 @@ export default function InteractiveTextHighlight({ originalText, structureAnalys
       { key: 'point', ...structureAnalysis.point },
       { key: 'reason', ...structureAnalysis.reason },
       { key: 'example', ...structureAnalysis.example },
-      { key: 'repoint', ...structureAnalysis.repoint }
+      { key: 'repoint', ...structureAnalysis.repoint },
+      { key: 'summary1', ...structureAnalysis.summary1 },
+      { key: 'summary2', ...structureAnalysis.summary2 },
+      { key: 'details', ...structureAnalysis.details }
     ].filter(segment => segment.text);
 
     // テキストを解析してハイライト位置を特定
@@ -78,7 +81,7 @@ export default function InteractiveTextHighlight({ originalText, structureAnalys
 
   return (
     <div className="relative">
-      <div className="text-lg leading-relaxed whitespace-pre-wrap">
+      <div className="text-sm leading-relaxed whitespace-pre-wrap">
         {renderHighlightedText()}
       </div>
       
