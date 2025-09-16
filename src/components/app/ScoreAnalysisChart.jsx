@@ -3,7 +3,9 @@
 import { TrendingUp } from "lucide-react"
 import { PolarAngleAxis, PolarRadiusAxis, PolarGrid, Radar, RadarChart } from "recharts"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, } from "@components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, } from "@components/ui/card"
+import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover"
+import { HelpCircle } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, } from "@components/ui/chart"
 
 export const description = "A radar chart with dots"
@@ -27,10 +29,19 @@ export function ScoreAnalysisChart({ scores, title, description }) {
   return (
     <Card>
       <CardHeader className="items-center">
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>
-          {description}
-        </CardDescription>
+        <div className="flex items-center gap-2">
+          <CardTitle>{title}</CardTitle>
+          {description && (
+            <Popover>
+              <PopoverTrigger>
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <p className="text-sm">{description}</p>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="pb-0">
         <ChartContainer
@@ -39,9 +50,9 @@ export function ScoreAnalysisChart({ scores, title, description }) {
         >
           <RadarChart data={chartData}>
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <PolarAngleAxis dataKey="name" tick={{ fontSize: 14, tickSize: 10, dy: 6, radius: 20 }} />
+            <PolarAngleAxis dataKey="name" tick={{ fontSize: 14 }} tickFormatter={(value) => value}  />
             <PolarGrid />
-            <PolarRadiusAxis domain={[0, 5]} tick={true} tickCount={6} axisLine={false} angle={90} />
+            <PolarRadiusAxis domain={[0, 5]} tick={false} tickCount={6} axisLine={false} angle={90} />
             <Radar
               dataKey="score"
               fill="hsl(var(--chart-5))"

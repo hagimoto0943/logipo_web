@@ -55,6 +55,17 @@ export default function ReviewDetail() {
               />
             </div>
 
+            {review.result.score_analysis && (
+              <div>
+                <ScoreAnalysisChart 
+                  scores={review.result.score_analysis?.score} title="文章力総合分析" 
+                  description="このチャートは、文章を「構成力」「論理性」「具体性」「明瞭性」の4つの観点から分析し、スコア化したものです。
+                                各観点は、読者に伝わりやすく、説得力のある文章を書くために重要な要素です。
+                                チャートを活用することで、自分の文章の強みや改善点を直感的に把握できます。" 
+                />
+              </div>
+            )}
+
             {review.result && (
               <div className="bg-white p-6 rounded-lg border">
                 <h2 className="text-xl font-semibold mb-4">添削結果</h2>
@@ -72,15 +83,6 @@ export default function ReviewDetail() {
                     {review.result.feedback}
                   </p>
                 </div>
-
-                {review.result.score_analysis && (
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">スコア分析</h3>
-                    <ScoreAnalysisChart scores={review.result.score_analysis?.score} title="文章力総合分析 (Comprehensive Writing Analysis)" description="このチャートは、文章を「構成力」「論理性」「具体性」「明瞭性」の4つの観点から分析し、スコア化したものです。
-各観点は、読者に伝わりやすく、説得力のある文章を書くために重要な要素です。
-チャートを活用することで、自分の文章の強みや改善点を直感的に把握できます。" />
-                  </div>
-                )}
               </div>
             )}
           </div>
