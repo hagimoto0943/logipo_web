@@ -152,3 +152,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* MUI X Charts: Adjust radar area opacity (stronger fill) */
+.MuiRadarSeriesPlot-area { fill-opacity: 0.4; }
+.MuiRadarSeriesPlot-area.MuiRadarSeriesPlot-highlighted { fill-opacity: 0.6; }
+.MuiRadarSeriesPlot-area.MuiRadarSeriesPlot-faded { fill-opacity: 0.25; }

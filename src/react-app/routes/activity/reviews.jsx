@@ -1,6 +1,4 @@
 import React, {useState, useEffect} from "react";
-import { useParams } from "react-router-dom";
-import { ContentListSidebar } from "@components/app/ContentListSidebar";
 import { SidebarProvider } from "@components/ui/sidebar"
 import ReviewApi from "@api/base/review";
 

@@ -6,6 +6,7 @@ import ReviewApi from "@api/base/review";
 import InteractiveTextHighlight from "@components/app/InteractiveTextHighlight";
 import { StructureKindBadge } from "@components/app/StructureKindBadge";
 import { ScoreAnalysisChart } from "@components/app/ScoreAnalysisChart";
+import { StructureAnalysisChart } from "@components/app/StructureAnalysisChart";
 
 export default function ReviewDetail() {
   const { id } = useParams();
@@ -55,13 +56,24 @@ export default function ReviewDetail() {
               />
             </div>
 
-            {review.result.score_analysis && (
+            {review.result?.score_analysis && (
               <div>
                 <ScoreAnalysisChart 
                   scores={review.result.score_analysis?.score} title="文章力総合分析" 
                   description="このチャートは、文章を「構成力」「論理性」「具体性」「明瞭性」の4つの観点から分析し、スコア化したものです。
                                 各観点は、読者に伝わりやすく、説得力のある文章を書くために重要な要素です。
                                 チャートを活用することで、自分の文章の強みや改善点を直感的に把握できます。" 
+                />
+              </div>
+            )}
+
+            {review.result?.structure_analysis && (
+              <div className="mt-6">
+                <StructureAnalysisChart 
+                  structure={review.result.structure_analysis} title="構造分析" 
+                  description="このチャートは、文章の各構成要素（主張、理由、具体例、再主張）を分析し、スコア化したものです。
+                                各要素がバランスよく配置されているかを視覚的に把握できます。
+                                チャートを活用することで、説得力のある文章構成を目指す際の参考になります。" 
                 />
               </div>
             )}
