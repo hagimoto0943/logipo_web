@@ -29,7 +29,7 @@ export function StructureAnalysisChart({ structure, scores, title, description }
       ]
 
   return (
-    <div className="bg-white p-6 rounded-lg border">
+    <div className="bg-white rounded-lg border">
       <CardHeader className="items-center">
         <div className="flex items-center gap-2">
           <CardTitle className="text-md font-semibold text-stone-600">{title}</CardTitle>

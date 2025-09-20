@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from "react";
 import { useParams } from "react-router-dom";
+import { Grid } from "@mui/material";
 import { ContentListSidebar } from "@components/app/ContentListSidebar";
 import { SidebarProvider } from "@components/ui/sidebar"
 import ReviewApi from "@api/base/review";
@@ -38,7 +39,7 @@ export default function ReviewDetail() {
   return (
     <SidebarProvider>
       <div className="flex flex-row w-full">
-        <div className="container lg:mx-8 px-4 py-8 flex-1">
+        <div className="container lg:mx-8 px-4 py-4 flex-1">
           <div className="mb-8">
             <h1 className="text-xl font-semibold text-stone-700 mb-4">{review.title}</h1>
             <div className="flex items-center gap-4 mb-6">
@@ -48,55 +49,63 @@ export default function ReviewDetail() {
               </span>
             </div>
             
-            <div className="bg-gray-50 p-6 rounded-lg mb-6">
-              <h2 className="text-md font-semibold text-stone-600 mb-4">添削した文章</h2>
-              <InteractiveTextHighlight 
-                originalText={review.original_text}
-                structureAnalysis={review.result?.structure_analysis}
-              />
-            </div>
-
-            {review.result?.score_analysis && (
-              <div>
-                <ScoreAnalysisChart 
-                  scores={review.result.score_analysis?.score} title="文章力総合分析" 
-                  description="このチャートは、文章を「構成力」「論理性」「具体性」「明瞭性」の4つの観点から分析し、スコア化したものです。
-                                各観点は、読者に伝わりやすく、説得力のある文章を書くために重要な要素です。
-                                チャートを活用することで、自分の文章の強みや改善点を直感的に把握できます。" 
-                />
-              </div>
-            )}
-
-            {review.result?.structure_analysis && (
-              <div className="mt-6">
-                <StructureAnalysisChart 
-                  structure={review.result.structure_analysis} title="構造分析" 
-                  description="このチャートは、文章の各構成要素（主張、理由、具体例、再主張）を分析し、スコア化したものです。
-                                各要素がバランスよく配置されているかを視覚的に把握できます。
-                                チャートを活用することで、説得力のある文章構成を目指す際の参考になります。" 
-                />
-              </div>
-            )}
-
-            {review.result && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h2 className="text-xl font-semibold mb-4">添削結果</h2>
-                
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-2">改善版</h3>
-                  <p className="text-gray-800 leading-relaxed bg-green-50 p-4 rounded">
-                    {review.result.model_text}
-                  </p>
+            <Grid container spacing={2}>
+              <Grid item size={12}>
+                <div className="bg-gray-50 p-6 rounded-lg mb-6">
+                  <h2 className="text-md font-semibold text-stone-600 mb-4">添削した文章</h2>
+                  <InteractiveTextHighlight
+                    originalText={review.original_text}
+                    structureAnalysis={review.result?.structure_analysis}
+                  />
                 </div>
+              </Grid>
+              <Grid item size={6}>
+                {review.result?.score_analysis && (
+                  <div>
+                    <ScoreAnalysisChart 
+                      scores={review.result.score_analysis?.score} title="文章力総合分析" 
+                      description="このチャートは、文章を「構成力」「論理性」「具体性」「明瞭性」の4つの観点から分析し、スコア化したものです。
+                                    各観点は、読者に伝わりやすく、説得力のある文章を書くために重要な要素です。
+                                    チャートを活用することで、自分の文章の強みや改善点を直感的に把握できます。" 
+                    />
+                  </div>
+                )}
+              </Grid>
+              <Grid item size={6}>
+                {review.result?.structure_analysis && (
+                  <div>
+                    <StructureAnalysisChart 
+                      structure={review.result.structure_analysis} title="構造分析" 
+                      description="このチャートは、文章の各構成要素（主張、理由、具体例、再主張）を分析し、スコア化したものです。
+                                    各要素がバランスよく配置されているかを視覚的に把握できます。
+                                    チャートを活用することで、説得力のある文章構成を目指す際の参考になります。" 
+                    />
+                  </div>
+                )}
+              </Grid>
+              <Grid item size={12}>
+                {review.result && (
+                  <div className="bg-white p-6 rounded-lg border">
+                    <h2 className="text-xl font-semibold mb-4">添削結果</h2>
+                    
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-2">改善版</h3>
+                      <p className="text-gray-800 leading-relaxed bg-green-50 p-4 rounded">
+                        {review.result.model_text}
+                      </p>
+                    </div>
 
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-2">総合フィードバック</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    {review.result.feedback}
-                  </p>
-                </div>
-              </div>
-            )}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-2">総合フィードバック</h3>
+                      <p className="text-gray-700 leading-relaxed">
+                        {review.result.feedback}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </Grid>
+            </Grid>
+
           </div>
         </div>
         <div className="flex-shrink-0">
