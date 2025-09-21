@@ -2,12 +2,14 @@ import React, {useState, useEffect} from "react";
 import { useParams } from "react-router-dom";
 import { Grid } from "@mui/material";
 import { ContentListSidebar } from "@components/app/ContentListSidebar";
-import { SidebarProvider } from "@components/ui/sidebar"
+import { SidebarProvider, SidebarTrigger, useSidebar } from "@components/ui/sidebar"
+import { Button } from "@components/ui/button"
+import { PanelLeft } from "lucide-react"
 import ReviewApi from "@api/base/review";
 import InteractiveTextHighlight from "@components/app/InteractiveTextHighlight";
 import { StructureKindBadge } from "@components/app/StructureKindBadge";
-import { ScoreAnalysisChart } from "@components/app/ScoreAnalysisChart";
 import { StructureAnalysisChart } from "@components/app/StructureAnalysisChart";
+import FeedbackScorePanel from "@components/app/FeedbackScorePanel";
 
 export default function ReviewDetail() {
   const { id } = useParams();
@@ -36,19 +38,49 @@ export default function ReviewDetail() {
     );
   }
 
+  const HeaderToggle = () => {
+    const { open, toggleSidebar } = useSidebar()
+    if (open) return null
+    return (
+      <Button
+        onClick={toggleSidebar}
+        variant="outline"
+        size="sm"
+        className="hidden md:inline-flex items-center gap-2 text-stone-700"
+        title="履歴を開く"
+        aria-label="履歴を開く"
+      >
+        <PanelLeft className="h-4 w-4" />
+        <span>履歴</span>
+      </Button>
+    )
+  }
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="flex flex-row w-full">
         <div className="container lg:mx-8 px-4 py-4 flex-1">
           <div className="mb-8">
-            <h1 className="text-xl font-semibold text-stone-700 mb-4">{review.title}</h1>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-xl font-semibold text-stone-700">{review.title}</h1>
+              <HeaderToggle />
+            </div>
             <div className="flex items-center gap-4 mb-6">
               <StructureKindBadge structureKind={review?.structure_kind} size="text-xs" />
               <span className="text-sm text-gray-500">
                 {new Date(review.created_at).toLocaleString()}
               </span>
             </div>
-            
+            {/* Analysis summary: integrated feedback + radar (7:3) */}
+            {(review.result?.score_analysis || review.result?.feedback) && (
+              <div className="mb-6">
+                <FeedbackScorePanel
+                  feedback={review.result?.feedback}
+                  scores={review.result?.score_analysis?.score}
+                />
+              </div>
+            )}
+
             <Grid container spacing={2}>
               <Grid item size={12}>
                 <div className="bg-gray-50 p-6 rounded-lg mb-6">
@@ -59,19 +91,7 @@ export default function ReviewDetail() {
                   />
                 </div>
               </Grid>
-              <Grid item size={6}>
-                {review.result?.score_analysis && (
-                  <div>
-                    <ScoreAnalysisChart 
-                      scores={review.result.score_analysis?.score} title="文章力総合分析" 
-                      description="このチャートは、文章を「構成力」「論理性」「具体性」「明瞭性」の4つの観点から分析し、スコア化したものです。
-                                    各観点は、読者に伝わりやすく、説得力のある文章を書くために重要な要素です。
-                                    チャートを活用することで、自分の文章の強みや改善点を直感的に把握できます。" 
-                    />
-                  </div>
-                )}
-              </Grid>
-              <Grid item size={6}>
+              <Grid item size={12}>
                 {review.result?.structure_analysis && (
                   <div>
                     <StructureAnalysisChart 
@@ -94,13 +114,6 @@ export default function ReviewDetail() {
                         {review.result.model_text}
                       </p>
                     </div>
-
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium mb-2">総合フィードバック</h3>
-                      <p className="text-gray-700 leading-relaxed">
-                        {review.result.feedback}
-                      </p>
-                    </div>
                   </div>
                 )}
               </Grid>
@@ -109,8 +122,12 @@ export default function ReviewDetail() {
           </div>
         </div>
         <div className="flex-shrink-0">
-          <ContentListSidebar side={"right"} />
+          <ContentListSidebar side={"right"} collapsible="offcanvas" width="clamp(260px, 24vw, 380px)" dense />
         </div>
+      </div>
+      {/* Floating toggle for easy access */}
+      <div className="fixed bottom-5 right-5 z-50 md:hidden">
+        <SidebarTrigger className="inline-flex h-12 w-12 rounded-full border bg-white shadow-lg text-stone-700 hover:bg-stone-50" title="履歴" aria-label="履歴" />
       </div>
     </SidebarProvider>
   );

@@ -9,21 +9,21 @@ export default function InteractiveTextHighlight({ originalText, structureAnalys
   const markRefs = useRef({});
   const STRUCTURE_CONFIG = useMemo(() => ({
     prep: [
-      { key: 'point', label: '主張', colorVar: '--chart-1' },
-      { key: 'reason', label: '理由', colorVar: '--chart-2' },
-      { key: 'example', label: '具体例', colorVar: '--chart-3' },
-      { key: 'repoint', label: '再主張', colorVar: '--chart-4' },
+      { key: 'point', label: 'Point（主張）', colorVar: '--chart-1' },
+      { key: 'reason', label: 'Reason（理由）', colorVar: '--chart-2' },
+      { key: 'example', label: 'Example（具体例）', colorVar: '--chart-3' },
+      { key: 'repoint', label: 'Repoint（再主張）', colorVar: '--chart-4' },
     ],
     sds: [
-      { key: 'summary1', label: '要約', colorVar: '--chart-1' },
-      { key: 'details', label: '詳細', colorVar: '--chart-2' },
-      { key: 'summary2', label: '結論', colorVar: '--chart-3' },
+      { key: 'summary1', label: 'Summary（要点）', colorVar: '--chart-1' },
+      { key: 'details', label: 'Details（詳細）', colorVar: '--chart-2' },
+      { key: 'summary2', label: 'Summary（要点）', colorVar: '--chart-3' },
     ],
     desc: [
-      { key: 'describe', label: 'Describe', colorVar: '--chart-1' },
-      { key: 'express', label: 'Express', colorVar: '--chart-2' },
-      { key: 'suggest', label: 'Suggest', colorVar: '--chart-3' },
-      { key: 'choose', label: 'Choose', colorVar: '--chart-4' },
+      { key: 'describe', label: 'Describe（描写）', colorVar: '--chart-1' },
+      { key: 'express', label: 'Express（説明）', colorVar: '--chart-2' },
+      { key: 'suggest', label: 'Suggest（提案）', colorVar: '--chart-3' },
+      { key: 'choose', label: 'Choose（選択）', colorVar: '--chart-4' },
     ],
   }), []);
 
