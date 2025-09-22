@@ -10,9 +10,20 @@ import newInfiniteList from "@components/app/newInfiniteList"
 
 export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collapsible = "icon", className = "", dense = false, overlay = false, ...props }) {
   const reviewApi = new ReviewApi()
+  const [query, setQuery] = useState("")
+  const [debouncedQuery, setDebouncedQuery] = useState("")
+  const [kind, setKind] = useState("all") // all | prep | sds | desc | free
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 300)
+    return () => clearTimeout(t)
+  }, [query])
 
   const getReviewList = async ({ offset, limit }) => {
-    const res = await reviewApi.getList({ offset, limit })
+    const params = { offset, limit }
+    if (debouncedQuery) params.q = debouncedQuery
+    if (kind && kind !== 'all') params.structure_kind = kind
+    const res = await reviewApi.getList(params)
     return {
       item: res.data || [],
       hasMore: (offset + res.data.length) < res.total
@@ -28,7 +39,8 @@ export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collap
   const infiniteList = newInfiniteList({
     getList: getReviewList,
     ItemComponent: ItemWrapper,
-    limit: 10
+    limit: 10,
+    resetDeps: [debouncedQuery, kind]
   })
 
   return (
@@ -39,7 +51,7 @@ export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collap
       overlay={overlay}
       style={{ "--sidebar-width": width }}
     >
-      <SidebarHeader className="gap-3.5 border-b p-4 sticky top-0 z-10 bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/75">
+      <SidebarHeader className="gap-3.5 border-b p-4 sticky top-0 z-10 bg-gradient-to-b from-sidebar/95 to-sidebar/80 backdrop-blur supports-[backdrop-filter]:from-sidebar/70 supports-[backdrop-filter]:to-sidebar/60">
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-2 text-foreground text-neutral-700 font-bold">
             <History className="h-4 w-4 text-muted-foreground" />
@@ -53,7 +65,24 @@ export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collap
             <SidebarTrigger className="h-7 w-7 rounded-md border bg-white/70 text-stone-700 hover:bg-white" title="履歴を閉じる" aria-label="履歴を閉じる" />
           </div>
         </div>
-        <SidebarInput placeholder="検索…" />
+        <SidebarInput placeholder="検索…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          {[
+            {key:'all', label:'すべて'},
+            {key:'prep', label:'PREP'},
+            {key:'sds', label:'SDS'},
+            {key:'desc', label:'DESC'},
+          ].map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setKind(opt.key)}
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs transition-colors ${kind===opt.key ? 'bg-primary text-primary-foreground border-primary' : 'bg-background/80 text-foreground hover:bg-muted border-border'}`}
+              aria-pressed={kind===opt.key}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup className="px-0">
@@ -92,7 +121,7 @@ const ReviewItem = ({ item, dense = false, isActive = false }) => {
       to={`/app/reviews/${item.id}`}
       key={item.id}
       aria-current={isActive ? 'page' : undefined}
-      className={`${activeCls} group flex flex-col items-start gap-1 ${baseItemPad} text-sm leading-tight rounded-md border border-transparent transition-colors whitespace-nowrap ring-1 ring-transparent hover:ring-sidebar-border`}
+      className={`${activeCls} group flex flex-col items-start gap-1 ${baseItemPad} text-sm leading-tight rounded-md border border-transparent whitespace-nowrap ring-1 ring-transparent hover:ring-sidebar-border transition-all duration-150 hover:shadow-sm hover:-translate-y-[1px]`}
     >
       <div className="flex w-full items-center gap-2">
         <span className={`font-semibold text-stone-800 ${titleSize} truncate w-full`}>{item.title || '無題'}</span>

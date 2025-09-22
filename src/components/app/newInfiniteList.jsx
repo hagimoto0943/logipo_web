@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 
-export default function newInfiniteList({ getList, ItemComponent, limit=30, ...props}) {
+export default function newInfiniteList({ getList, ItemComponent, limit=30, resetDeps = [], ...props}) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -26,6 +26,16 @@ export default function newInfiniteList({ getList, ItemComponent, limit=30, ...p
   useEffect(() => {
     loadMore()
   }, [])
+
+  // Reset list when dependencies change (e.g., search query, filters)
+  useEffect(() => {
+    setItems([])
+    offsetRef.current = 0
+    setHasMore(true)
+    // Kick a new load after reset
+    loadMore()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, resetDeps)
 
   useEffect(() => {
     const root = containerRef.current
