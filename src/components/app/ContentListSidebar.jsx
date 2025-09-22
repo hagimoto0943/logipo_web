@@ -121,7 +121,7 @@ const ReviewItem = ({ item, dense = false, isActive = false }) => {
       to={`/app/reviews/${item.id}`}
       key={item.id}
       aria-current={isActive ? 'page' : undefined}
-      className={`${activeCls} group flex flex-col items-start gap-1 ${baseItemPad} text-sm leading-tight rounded-md border border-transparent whitespace-nowrap ring-1 ring-transparent hover:ring-sidebar-border transition-all duration-150 hover:shadow-sm hover:-translate-y-[1px]`}
+      className={`${activeCls} group flex flex-col items-start gap-1 ${baseItemPad} text-sm leading-tight rounded-md border border-transparent whitespace-nowrap ring-1 ring-transparent hover:ring-sidebar-border transition-colors`}
     >
       <div className="flex w-full items-center gap-2">
         <span className={`font-semibold text-stone-800 ${titleSize} truncate w-full`}>{item.title || '無題'}</span>
