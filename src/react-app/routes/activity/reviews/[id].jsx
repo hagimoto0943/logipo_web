@@ -40,13 +40,13 @@ export default function ReviewDetail() {
 
   const HeaderToggle = () => {
     const { open, toggleSidebar } = useSidebar()
-    if (open) return null
+    // Keep layout stable: render placeholder when open (invisible button keeps size)
     return (
       <Button
-        onClick={toggleSidebar}
+        onClick={open ? undefined : toggleSidebar}
         variant="outline"
         size="sm"
-        className="hidden md:inline-flex items-center gap-2 text-stone-700"
+        className={`hidden md:inline-flex items-center gap-2 text-stone-700 ${open ? 'invisible pointer-events-none' : ''}`}
         title="履歴を開く"
         aria-label="履歴を開く"
       >
@@ -122,7 +122,7 @@ export default function ReviewDetail() {
           </div>
         </div>
         <div className="flex-shrink-0">
-          <ContentListSidebar side={"right"} collapsible="offcanvas" width="clamp(260px, 24vw, 380px)" dense />
+          <ContentListSidebar side={"right"} collapsible="offcanvas" width="clamp(260px, 24vw, 380px)" dense overlay />
         </div>
       </div>
       {/* Floating toggle for easy access */}

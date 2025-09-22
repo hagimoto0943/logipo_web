@@ -8,7 +8,7 @@ import { StructureKindBadge } from "@components/app/StructureKindBadge"
 import ReviewApi from "@api/base/review"
 import newInfiniteList from "@components/app/newInfiniteList"
 
-export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collapsible = "icon", className = "", dense = false, ...props }) {
+export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collapsible = "icon", className = "", dense = false, overlay = false, ...props }) {
   const reviewApi = new ReviewApi()
 
   const getReviewList = async ({ offset, limit }) => {
@@ -36,6 +36,7 @@ export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collap
       {...props}
       className={`hidden md:flex ${className}`}
       collapsible={collapsible}
+      overlay={overlay}
       style={{ "--sidebar-width": width }}
     >
       <SidebarHeader className="gap-3.5 border-b p-4 sticky top-0 z-10 bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/75">
