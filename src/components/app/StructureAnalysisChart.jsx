@@ -1,11 +1,8 @@
 "use client"
 
 import { RadarChart } from "@mui/x-charts/RadarChart"
-import { CardContent, CardFooter, CardHeader, CardTitle } from "@components/ui/card"
-import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover"
-import { HelpCircle } from "lucide-react"
 
-export function StructureAnalysisChart({ structure, scores, title, description, structureKind }) {
+export function StructureAnalysisChart({ structure, scores, structureKind, height = 220, className = "" }) {
   // Build labels/data based on structure kind. Fallback to legacy `scores`.
   const hasStructure = Boolean(structure)
 
@@ -71,37 +68,22 @@ export function StructureAnalysisChart({ structure, scores, title, description, 
   const canRender = labels.length > 0 && data.length > 0
 
   return (
-    <div className="bg-white rounded-lg border">
-      <CardHeader className="items-center">
-        <div className="flex items-center gap-2">
-          {description && (
-            <Popover>
-              <PopoverTrigger>
-                <HelpCircle className="h-4 w-4 text-muted-foreground" />
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <p className="text-sm">{description}</p>
-              </PopoverContent>
-            </Popover>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="pb-0">
+    <div className={`rounded-md border bg-white ${className}`}>
+      <div className="p-3">
         <div className="mx-auto max-w-full">
           {canRender ? (
             <RadarChart
-              height={250}
+              height={height}
               series={[{ data, fillArea: true, color: "hsl(var(--primary))" }]}
               radar={{ metrics: labels, max: 5 }}
             />
           ) : (
-            <div className="h-[250px] grid place-items-center text-sm text-muted-foreground">
+            <div className="h-[220px] grid place-items-center text-xs text-muted-foreground">
               データがありません
             </div>
           )}
         </div>
-      </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm" />
+      </div>
     </div>
   )
 }

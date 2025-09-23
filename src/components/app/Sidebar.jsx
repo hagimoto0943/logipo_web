@@ -14,21 +14,21 @@ const data = {
   navMain: [
     {
       title: "添削",
-      url: "/app/activity/reviews/new",
+      url: "/app/reviews/new",
       icon: SquarePen,
       isActive: true,
       items: [
-        { title: "新規作成", url: "/app/activity/reviews/new" },
+        { title: "新規作成", url: "/app/reviews/new" },
+        { title: "一覧", url: "/app/reviews" },
         { title: "ダッシュボード", url: "/app/dashboard" },
       ],
     },
     {
       title: "トレーニング",
-      url: "/app/activity/trainings",
+      url: "/app/training",
       icon: Bot,
       items: [
-        { title: "一覧", url: "/app/activity/trainings" },
-        { title: "新規", url: "/app/activity/trainings/new" },
+        { title: "トレーニング", url: "/app/training" },
       ],
     },
   ],
