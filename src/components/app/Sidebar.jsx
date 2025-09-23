@@ -1,149 +1,35 @@
 import * as React from "react"
-import { AudioWaveform, BookOpen, Bot, Command, Frame, GalleryVerticalEnd, Map, PieChart, Settings2, SquareTerminal} from "lucide-react"
+import { Bot, SquarePen, Settings2 } from "lucide-react"
 import { NavMain } from "@components/ui/nav-main"
-import { NavProjects } from "@components/ui/nav-projects"
 import { NavUser } from "@components/ui/nav-user"
-import { TeamSwitcher } from "@components/ui/team-switcher"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@components/ui/sidebar"
-import ReviewApi from "@lib/api/base/review.js"
 
 // This is sample data.
 const data = {
   user: {
-    name: "shadcn",
+    name: "User",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
   navMain: [
     {
-      title: "Talking Method",
-      url: "#",
-      icon: SquareTerminal,
+      title: "添削",
+      url: "/app/reviews/new",
+      icon: SquarePen,
       isActive: true,
       items: [
-        {
-          title: "Reviews List",
-          url: "#",
-        },
-        {
-          title: "Review",
-          url: "#",
-        },
+        { title: "新規作成", url: "/app/reviews/new" },
+        { title: "一覧", url: "/app/reviews" },
+        { title: "ダッシュボード", url: "/app/dashboard" },
       ],
     },
     {
-      title: "Training",
-      url: "#",
+      title: "トレーニング",
+      url: "/app/training",
       icon: Bot,
       items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
+        { title: "トレーニング", url: "/app/training" },
       ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-    {
-      name: 'Dashboard',
-      url: '/app/dashboard',
-      icon: Frame,
-    },
-    {
-      name: 'Training',
-      url: '/app/training',
-      icon: Bot,
-    },
-    {
-      name: 'Component Testing',
-      url: '/app/test',
-      icon: Settings2,
     },
   ],
 }
@@ -153,12 +39,9 @@ export function AppSidebar({
 }) {
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader>
+      <SidebarHeader />
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

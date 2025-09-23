@@ -2,13 +2,11 @@ import Base from '../base.js'
 
 export default class ReviewApi extends Base {
   constructor() {
-    super({
-      apiPrefix: import.meta.env.PUBLIC_API_URL || ''
-    })
+    super({ apiPrefix: import.meta.env.PUBLIC_API_URL || '' })
   }
 
-  getList() {
-    return this.fetch('/activity/reviews', {method: 'GET'})
+  getList(data) {
+    return this.fetch('/activity/reviews', {method: 'GET', params: data})
   }
 
   getById(id) {

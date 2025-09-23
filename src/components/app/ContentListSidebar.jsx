@@ -1,148 +1,170 @@
 import React, {useState, useEffect} from "react"
-import { ArchiveX, Command, File, Inbox, Send, Trash2 } from "lucide-react"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarGroupContent,
-  SidebarInput,
-  useSidebar
-} from "@components/ui/sidebar"
+import { Link, useLocation } from "react-router-dom"
+import { Sidebar, SidebarContent, SidebarGroup, SidebarHeader, SidebarGroupContent, SidebarInput, SidebarTrigger, useSidebar } from "@components/ui/sidebar"
+import { useIsMobile } from "@lib/api/hooks/use-mobile"
 import { Label } from "@components/ui/label"
 import { Switch } from "@components/ui/switch"
+import { History, Star } from "lucide-react"
+import { StructureKindBadge } from "@components/app/StructureKindBadge"
+import ReviewApi from "@api/base/review"
+import newInfiniteList from "@components/app/newInfiniteList"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      name: "William Smith",
-      email: "williamsmith@example.com",
-      subject: "Meeting Tomorrow",
-      date: "09:34 AM",
-      teaser:
-        "Hi team, just a reminder about our meeting tomorrow at 10 AM.\nPlease come prepared with your project updates.",
-    },
-    {
-      name: "Alice Smith",
-      email: "alicesmith@example.com",
-      subject: "Re: Project Update",
-      date: "Yesterday",
-      teaser:
-        "Thanks for the update. The progress looks great so far.\nLet's schedule a call to discuss the next steps.",
-    },
-    {
-      name: "Bob Johnson",
-      email: "bobjohnson@example.com",
-      subject: "Weekend Plans",
-      date: "2 days ago",
-      teaser:
-        "Hey everyone! I'm thinking of organizing a team outing this weekend.\nWould you be interested in a hiking trip or a beach day?",
-    },
-    {
-      name: "Emily Davis",
-      email: "emilydavis@example.com",
-      subject: "Re: Question about Budget",
-      date: "2 days ago",
-      teaser:
-        "I've reviewed the budget numbers you sent over.\nCan we set up a quick call to discuss some potential adjustments?",
-    },
-    {
-      name: "Michael Wilson",
-      email: "michaelwilson@example.com",
-      subject: "Important Announcement",
-      date: "1 week ago",
-      teaser:
-        "Please join us for an all-hands meeting this Friday at 3 PM.\nWe have some exciting news to share about the company's future.",
-    },
-    {
-      name: "Sarah Brown",
-      email: "sarahbrown@example.com",
-      subject: "Re: Feedback on Proposal",
-      date: "1 week ago",
-      teaser:
-        "Thank you for sending over the proposal. I've reviewed it and have some thoughts.\nCould we schedule a meeting to discuss my feedback in detail?",
-    },
-    {
-      name: "David Lee",
-      email: "davidlee@example.com",
-      subject: "New Project Idea",
-      date: "1 week ago",
-      teaser:
-        "I've been brainstorming and came up with an interesting project concept.\nDo you have time this week to discuss its potential impact and feasibility?",
-    },
-    {
-      name: "Olivia Wilson",
-      email: "oliviawilson@example.com",
-      subject: "Vacation Plans",
-      date: "1 week ago",
-      teaser:
-        "Just a heads up that I'll be taking a two-week vacation next month.\nI'll make sure all my projects are up to date before I leave.",
-    },
-    {
-      name: "James Martin",
-      email: "jamesmartin@example.com",
-      subject: "Re: Conference Registration",
-      date: "1 week ago",
-      teaser:
-        "I've completed the registration for the upcoming tech conference.\nLet me know if you need any additional information from my end.",
-    },
-    {
-      name: "Sophia White",
-      email: "sophiawhite@example.com",
-      subject: "Team Dinner",
-      date: "1 week ago",
-      teaser:
-        "To celebrate our recent project success, I'd like to organize a team dinner.\nAre you available next Friday evening? Please let me know your preferences.",
-    },
-  ],
-}
+export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collapsible, className = "", dense = false, overlay, ...props }) {
+  const reviewApi = new ReviewApi()
+  const [query, setQuery] = useState("")
+  const [debouncedQuery, setDebouncedQuery] = useState("")
+  const [kind, setKind] = useState("all") // all | prep | sds | desc | free
+  const isMobile = useIsMobile()
 
-export function ContentListSidebar({ ...props }) {
-  const [activeItem, setActiveItem] = useState(data.navMain[0])
-  const [navMain, setNavMain] = useState(data.navMain)
-  const { setOpen } = useSidebar()
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 300)
+    return () => clearTimeout(t)
+  }, [query])
+
+  const getReviewList = async ({ offset, limit }) => {
+    const params = { offset, limit }
+    if (debouncedQuery) params.q = debouncedQuery
+    if (kind && kind !== 'all') params.structure_kind = kind
+    const res = await reviewApi.getList(params)
+    return {
+      item: res.data || [],
+      hasMore: (offset + res.data.length) < res.total
+    }
+  }
+
+  const ItemWrapper = (props) => {
+    const location = useLocation()
+    const isActive = typeof location?.pathname === 'string' && location.pathname.includes(`/app/reviews/${props.item?.id}`)
+    return <ReviewItem {...props} dense={dense} isActive={isActive} />
+  }
+
+  const infiniteList = newInfiniteList({
+    getList: getReviewList,
+    ItemComponent: ItemWrapper,
+    limit: 10,
+    resetDeps: [debouncedQuery, kind]
+  })
+
+  // Desktop: fully off-canvas (no icon rail width when collapsed)
+  // Mobile: off-canvas overlay
+  const resolvedOverlay = overlay ?? isMobile
+  const resolvedCollapsible = collapsible ?? "offcanvas"
 
   return (
-    <Sidebar variant="floating" {...props} collaposible="none" className="hidden flex-1 md:flex" style={{ "--sidebar-width": "350px" }}>
-      <SidebarHeader className="gap-3.5 border-b p-4">
+    <>
+      <Sidebar
+        {...props}
+        className={`hidden md:flex ${className}`}
+        collapsible={resolvedCollapsible}
+        overlay={resolvedOverlay}
+        style={{ "--sidebar-width": width }}
+      >
+        <SidebarHeader className="gap-3.5 border-b p-4 sticky top-0 z-10 bg-gradient-to-b from-sidebar/95 to-sidebar/80 backdrop-blur supports-[backdrop-filter]:from-sidebar/70 supports-[backdrop-filter]:to-sidebar/60">
           <div className="flex w-full items-center justify-between">
-            <div className="text-foreground text-base font-medium">
-              文章添削履歴
+            <div className="flex items-center gap-2 text-foreground text-neutral-700 font-bold">
+              <History className="h-4 w-4 text-muted-foreground" />
+              <span>添削履歴</span>
             </div>
-            <Label className="flex items-center gap-2 text-sm">
-              <span>Unreads</span>
-              <Switch className="shadow-none" />
-            </Label>
+            <div className="flex items-center gap-2">
+              <Label className="flex items-center gap-2 text-sm">
+                <span>Unreads</span>
+                <Switch className="shadow-none" />
+              </Label>
+              <SidebarTrigger className="h-7 w-7 rounded-md border bg-white/70 text-stone-700 hover:bg-white" title="履歴を閉じる" aria-label="履歴を閉じる" />
+            </div>
           </div>
-        <SidebarInput placeholder="Type to search..." />
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent className="px-1.5 md:px-0">
-              {navMain.map((nav) => (
-                <a
-                  href="#"
-                  key={nav.email}
-                  className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex flex-col items-start gap-2 border-b p-4 text-sm leading-tight whitespace-nowrap last:border-b-0"
-                >
-                  <div className="flex w-full items-center gap-2">
-                    <span>{nav.name}</span>{" "}
-                    <span className="ml-auto text-xs">{nav.date}</span>
-                  </div>
-                  <span className="font-medium">{nav.subject}</span>
-                  <span className="line-clamp-2 w-[260px] text-xs whitespace-break-spaces">
-                    {nav.teaser}
-                  </span>
-                </a>
-              ))}
+          <SidebarInput placeholder="検索…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {[
+              {key:'all', label:'すべて'},
+              {key:'prep', label:'PREP'},
+              {key:'sds', label:'SDS'},
+              {key:'desc', label:'DESC'},
+            ].map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setKind(opt.key)}
+                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs transition-colors ${kind===opt.key ? 'bg-primary text-primary-foreground border-primary' : 'bg-background/80 text-foreground hover:bg-muted border-border'}`}
+                aria-pressed={kind===opt.key}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup className="px-0">
+            <SidebarGroupContent>
+              {infiniteList.render}
             </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+      {/* Mobile floating open button */}
+      <OpenSidebarTrigger side={props.side || 'right'} />
+    </>
+  )
+}
+
+function OpenSidebarTrigger({ side = 'right' }) {
+  const { open, toggleSidebar } = useSidebar()
+  if (open) return null
+  const sidePos = side === 'right' ? 'right-4' : 'left-4'
+  return (
+    <div className={`fixed ${sidePos} bottom-5 z-40 md:hidden`}>
+      <SidebarTrigger
+        onClick={toggleSidebar}
+        className="h-10 w-10 rounded-full border bg-white shadow-lg text-stone-700 hover:bg-stone-50"
+        title="履歴を開く"
+        aria-label="履歴を開く"
+      />
+    </div>
+  )
+}
+
+const ReviewItem = ({ item, dense = false, isActive = false }) => {
+  const baseItemPad = dense ? "p-3" : "p-4"
+  const titleSize = dense ? "text-[13px]" : "text-sm"
+  const metaSize = dense ? "text-[10px]" : "text-xs"
+  const activeCls = isActive ? "bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+
+  // Derive preview text (fallbacks)
+  const rawPreview = item?.preview_text || item?.result?.feedback || item?.original_text || ""
+  const previewCollapsed = rawPreview ? rawPreview.replace(/\s+/g, " ").slice(0, 80) + (rawPreview.length > 80 ? "…" : "") : null
+
+  // Derive average score if available
+  const scoreObj = item?.result?.score_analysis?.score || null
+  const scoreValues = scoreObj ? ["structure","logic","concreteness","clarity"].map(k => scoreObj?.[k]).filter(v => typeof v === 'number') : []
+  const avgScore = scoreValues.length ? Math.round((scoreValues.reduce((a,b)=>a+b,0)/scoreValues.length)*10)/10 : null
+  // Use theme-neutral chip (avoid strong colors)
+  const scoreClass = "bg-secondary text-foreground/70 border-border"
+  return (
+    <Link
+      to={`/app/reviews/${item.id}`}
+      key={item.id}
+      aria-current={isActive ? 'page' : undefined}
+      className={`${activeCls} group flex flex-col items-start gap-1 ${baseItemPad} text-sm leading-tight rounded-md border border-transparent whitespace-nowrap ring-1 ring-transparent hover:ring-sidebar-border transition-colors`}
+    >
+      <div className="flex w-full items-center gap-2">
+        <span className={`font-semibold text-stone-800 ${titleSize} truncate w-full`}>{item.title || '無題'}</span>
+        {avgScore != null && (
+          <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${scoreClass}`} title={`平均スコア: ${avgScore}`}>
+            <Star className="h-3 w-3" />
+            {avgScore.toFixed(1)}
+          </span>
+        )}
+      </div>
+      {previewCollapsed && (
+        <div className="w-full text-[11px] text-muted-foreground/90 leading-snug truncate">
+          {previewCollapsed}
+        </div>
+      )}
+      <div className="flex w-full items-center justify-between gap-2 mt-0.5">
+        <StructureKindBadge structureKind={item?.structure_kind} />
+        <span className={`${metaSize} text-muted-foreground tabular-nums`}>
+          {new Date(item.created_at).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" })}
+        </span>
+      </div>
+    </Link>
   )
 }

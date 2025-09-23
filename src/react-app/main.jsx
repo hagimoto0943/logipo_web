@@ -6,6 +6,9 @@ import Root from "./routes/root";
 import Training from "./routes/training";
 import Dashboard from "./routes/dashboard";
 import Test from "./routes/test";
+import Reviews from "./routes/activity/reviews";
+import ReviewDetail from "./routes/activity/reviews/[id]";
+import ReviewNew from "./routes/activity/reviews/new";
 
 const router = createBrowserRouter([
   {
@@ -13,6 +16,9 @@ const router = createBrowserRouter([
     element: <Root />,
     children: [
       { index: true, element: <Training /> },
+      { path: "reviews", element: <Reviews /> },
+      { path: "reviews/:id", element: <ReviewDetail /> },
+      { path: "reviews/new", element: <ReviewNew /> },
       { path: "training", element: <Training /> },
       { path: "dashboard", element: <Dashboard /> },
       { path: "test", element: <Test /> },
