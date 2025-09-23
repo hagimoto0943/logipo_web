@@ -146,7 +146,25 @@ const Sidebar = React.forwardRef((
   },
   ref
 ) => {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, state, open, setOpen, openMobile, setOpenMobile } = useSidebar()
+
+  // Lock background scroll when overlay sidebar is open on desktop
+  React.useEffect(() => {
+    if (!overlay || isMobile) return
+    const body = document.body
+    if (open) {
+      const scrollBarW = window.innerWidth - document.documentElement.clientWidth
+      body.style.overflow = 'hidden'
+      if (scrollBarW > 0) body.style.paddingRight = `${scrollBarW}px`
+    } else {
+      body.style.overflow = ''
+      body.style.paddingRight = ''
+    }
+    return () => {
+      body.style.overflow = ''
+      body.style.paddingRight = ''
+    }
+  }, [overlay, open, isMobile])
 
   if (collapsible === "none") {
     return (
@@ -206,14 +224,14 @@ const Sidebar = React.forwardRef((
         )} />
       <div
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-30 hidden h-svh w-[--sidebar-width] transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
-            : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l group-data-[collapsible=offcanvas]:border-0",
           className
         )}
         {...props}>
@@ -223,6 +241,16 @@ const Sidebar = React.forwardRef((
           {children}
         </div>
       </div>
+      {/* Desktop overlay backdrop when using overlay mode */}
+      {overlay && !isMobile && open && (
+        <div
+          className={cn(
+            "fixed inset-0 z-20 bg-black/30 backdrop-blur-[1px] transition-opacity",
+            "md:block"
+          )}
+          onClick={() => setOpen(false)}
+        />
+      )}
     </div>
   );
 })

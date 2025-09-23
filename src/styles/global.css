@@ -112,6 +112,12 @@
     --sidebar-accent-foreground: 24 9.8% 10%;
     --sidebar-border: 20 5.9% 90%;
     --sidebar-ring: 24.6 95% 53.1%;
+
+    /* Brand tone variants (same hue as primary, different saturation/lightness) */
+    --tone-1: 24.6 95% 53.1%; /* primary */
+    --tone-2: 24.6 80% 58%;
+    --tone-3: 24.6 62% 66%;
+    --tone-4: 24.6 45% 76%;
   }
 
   .dark {
@@ -139,6 +145,12 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    /* Brand tone variants for dark (adjusted lightness for contrast) */
+    --tone-1: 20.5 90.2% 48.2%; /* primary */
+    --tone-2: 20.5 80% 56%;
+    --tone-3: 20.5 70% 64%;
+    --tone-4: 20.5 60% 72%;
   }
 }
 

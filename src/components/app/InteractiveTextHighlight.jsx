@@ -2,28 +2,30 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
+import { StructureAnalysisChart } from "@components/app/StructureAnalysisChart";
+import Alert from "@mui/material/Alert";
 
-export default function InteractiveTextHighlight({ originalText, structureAnalysis, structureKind }) {
+export default function InteractiveTextHighlight({ originalText, structureAnalysis, structureKind, originalFeedback }) {
   const [activeKey, setActiveKey] = useState(null);
   const [flashKey, setFlashKey] = useState(null);
   const markRefs = useRef({});
   const STRUCTURE_CONFIG = useMemo(() => ({
     prep: [
-      { key: 'point', label: 'Point（主張）', colorVar: '--chart-1' },
-      { key: 'reason', label: 'Reason（理由）', colorVar: '--chart-2' },
-      { key: 'example', label: 'Example（具体例）', colorVar: '--chart-3' },
-      { key: 'repoint', label: 'Repoint（再主張）', colorVar: '--chart-4' },
+      { key: 'point', label: 'Point（主張）', colorVar: '--tone-1' },
+      { key: 'reason', label: 'Reason（理由）', colorVar: '--tone-2' },
+      { key: 'example', label: 'Example（具体例）', colorVar: '--tone-3' },
+      { key: 'repoint', label: 'Repoint（再主張）', colorVar: '--tone-4' },
     ],
     sds: [
-      { key: 'summary1', label: 'Summary（要点）', colorVar: '--chart-1' },
-      { key: 'details', label: 'Details（詳細）', colorVar: '--chart-2' },
-      { key: 'summary2', label: 'Summary（要点）', colorVar: '--chart-3' },
+      { key: 'summary1', label: 'Summary（要点）', colorVar: '--tone-1' },
+      { key: 'details', label: 'Details（詳細）', colorVar: '--tone-2' },
+      { key: 'summary2', label: 'Summary（要点）', colorVar: '--tone-3' },
     ],
     desc: [
-      { key: 'describe', label: 'Describe（描写）', colorVar: '--chart-1' },
-      { key: 'express', label: 'Express（説明）', colorVar: '--chart-2' },
-      { key: 'suggest', label: 'Suggest（提案）', colorVar: '--chart-3' },
-      { key: 'choose', label: 'Choose（選択）', colorVar: '--chart-4' },
+      { key: 'describe', label: 'Describe（描写）', colorVar: '--tone-1' },
+      { key: 'express', label: 'Express（説明）', colorVar: '--tone-2' },
+      { key: 'suggest', label: 'Suggest（提案）', colorVar: '--tone-3' },
+      { key: 'choose', label: 'Choose（選択）', colorVar: '--tone-4' },
     ],
   }), []);
 
@@ -67,7 +69,7 @@ export default function InteractiveTextHighlight({ originalText, structureAnalys
     return mapped.sort((a, b) => a.start - b.start);
   }, [originalText, segments]);
 
-  const getKindMeta = (key) => kinds.find(k => k.key === key) || { colorVar: '--chart-5', label: key };
+  const getKindMeta = (key) => kinds.find(k => k.key === key) || { colorVar: '--tone-1', label: key };
 
   const getQuality = (score) => {
     if (score == null) return { color: '#9CA3AF', label: '未評価' }; // gray-400
@@ -155,13 +157,34 @@ export default function InteractiveTextHighlight({ originalText, structureAnalys
 
   return (
     <div className="space-y-4">
+      {/* Top row: advice (left) + chart (right on desktop) */}
+      {(originalFeedback || structureAnalysis) && (
+        <div className="grid grid-cols-12 gap-4 items-start">
+          <div className="col-span-12 md:col-span-8">
+            {originalFeedback && (
+              <Alert severity="info" variant="outlined" sx={{ alignItems: 'flex-start' }}>
+                <span className="text-sm leading-relaxed whitespace-pre-wrap">{originalFeedback}</span>
+              </Alert>
+            )}
+          </div>
+          <div className="hidden md:block md:col-span-4">
+            {structureAnalysis && (
+              <StructureAnalysisChart
+                structure={structureAnalysis}
+                structureKind={inferKind}
+                title="構造スコア"
+              />
+            )}
+          </div>
+        </div>
+      )}
       {/* Legend */}
       {segments.length > 0 && inferKind !== 'free' && (
         <div className="flex flex-wrap gap-2 text-xs">
           {segments.map(seg => {
             const meta = getKindMeta(seg.key);
             const color = `hsl(var(${meta.colorVar}))`;
-            const bg = `hsl(var(${meta.colorVar}) / 0.15)`;
+            const bg = `hsl(var(${meta.colorVar}) / 0.12)`;
             return (
               <span key={`legend-${seg.key}`} className="inline-flex items-center gap-2 rounded-full px-2.5 py-1 border" style={{ backgroundColor: bg, borderColor: color }}>
                 <span className="font-medium" style={{ color }}>{meta.label}</span>
@@ -173,13 +196,15 @@ export default function InteractiveTextHighlight({ originalText, structureAnalys
       )}
 
       {segments.length > 0 && inferKind !== 'free' && (
-        <div className="text-xs text-muted-foreground">ハイライトの下線色は評価の強弱（良=緑/弱=赤）を示します</div>
+        <div className="text-xs text-muted-foreground">ハイライトの下線は評価の強弱を示します</div>
       )}
 
       {/* Text with highlights */}
       <div className="text-sm leading-relaxed whitespace-pre-wrap">
         {renderHighlightedText()}
       </div>
+
+      {/* (Advice moved to top as Alert) */}
 
       {/* Detail panel below with switcher */}
       {segments.length > 0 && (

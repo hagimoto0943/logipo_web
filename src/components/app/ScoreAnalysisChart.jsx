@@ -39,7 +39,7 @@ export function ScoreAnalysisChart({ scores, title, description, compact = false
           <RadarChart
             height={height}
             series={[
-              { data, fillArea: true, color: "hsl(var(--chart-5))" },
+              { data, fillArea: true, color: "hsl(var(--primary))" },
             ]}
             radar={{ metrics: labels, max: 5 }}
           />

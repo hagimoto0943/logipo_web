@@ -41,20 +41,20 @@ export default function FeedbackScorePanel({ feedback, scores, title = "総合�
 
   return (
     <div className="bg-white rounded-lg border p-5">
-      <div className="space-y-5">
+      <div className="md:grid grid-cols-12 gap-6 items-start">
         {hasFeedback && (
-          <div>
+          <div className="col-span-12 md:col-span-8">
             <h2 className="text-md font-semibold text-stone-700 mb-3">{title}</h2>
             <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{feedback}</p>
           </div>
         )}
         {hasScores && (
-          <div ref={containerRef} className="w-full">
+          <div className="hidden md:block md:col-span-4" ref={containerRef}>
             <div className="bg-white rounded-lg border">
               <div className="p-3">
                 <RadarChart
                   height={chartHeight}
-                  series={[{ data, fillArea: true, color: "hsl(var(--chart-5))" }]}
+                  series={[{ data, fillArea: true, color: "hsl(var(--primary))" }]}
                   radar={{ metrics: labels, max: 5 }}
                 />
               </div>

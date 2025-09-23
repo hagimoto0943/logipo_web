@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from "react"
 import { Link, useLocation } from "react-router-dom"
 import { Sidebar, SidebarContent, SidebarGroup, SidebarHeader, SidebarGroupContent, SidebarInput, SidebarTrigger, useSidebar } from "@components/ui/sidebar"
+import { useIsMobile } from "@lib/api/hooks/use-mobile"
 import { Label } from "@components/ui/label"
 import { Switch } from "@components/ui/switch"
 import { History, Star } from "lucide-react"
@@ -8,11 +9,12 @@ import { StructureKindBadge } from "@components/app/StructureKindBadge"
 import ReviewApi from "@api/base/review"
 import newInfiniteList from "@components/app/newInfiniteList"
 
-export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collapsible = "icon", className = "", dense = false, overlay = false, ...props }) {
+export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collapsible, className = "", dense = false, overlay, ...props }) {
   const reviewApi = new ReviewApi()
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const [kind, setKind] = useState("all") // all | prep | sds | desc | free
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 300)
@@ -43,55 +45,80 @@ export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collap
     resetDeps: [debouncedQuery, kind]
   })
 
+  // Desktop: fully off-canvas (no icon rail width when collapsed)
+  // Mobile: off-canvas overlay
+  const resolvedOverlay = overlay ?? isMobile
+  const resolvedCollapsible = collapsible ?? "offcanvas"
+
   return (
-    <Sidebar
-      {...props}
-      className={`hidden md:flex ${className}`}
-      collapsible={collapsible}
-      overlay={overlay}
-      style={{ "--sidebar-width": width }}
-    >
-      <SidebarHeader className="gap-3.5 border-b p-4 sticky top-0 z-10 bg-gradient-to-b from-sidebar/95 to-sidebar/80 backdrop-blur supports-[backdrop-filter]:from-sidebar/70 supports-[backdrop-filter]:to-sidebar/60">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-2 text-foreground text-neutral-700 font-bold">
-            <History className="h-4 w-4 text-muted-foreground" />
-            <span>添削履歴</span>
+    <>
+      <Sidebar
+        {...props}
+        className={`hidden md:flex ${className}`}
+        collapsible={resolvedCollapsible}
+        overlay={resolvedOverlay}
+        style={{ "--sidebar-width": width }}
+      >
+        <SidebarHeader className="gap-3.5 border-b p-4 sticky top-0 z-10 bg-gradient-to-b from-sidebar/95 to-sidebar/80 backdrop-blur supports-[backdrop-filter]:from-sidebar/70 supports-[backdrop-filter]:to-sidebar/60">
+          <div className="flex w-full items-center justify-between">
+            <div className="flex items-center gap-2 text-foreground text-neutral-700 font-bold">
+              <History className="h-4 w-4 text-muted-foreground" />
+              <span>添削履歴</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="flex items-center gap-2 text-sm">
+                <span>Unreads</span>
+                <Switch className="shadow-none" />
+              </Label>
+              <SidebarTrigger className="h-7 w-7 rounded-md border bg-white/70 text-stone-700 hover:bg-white" title="履歴を閉じる" aria-label="履歴を閉じる" />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Label className="flex items-center gap-2 text-sm">
-              <span>Unreads</span>
-              <Switch className="shadow-none" />
-            </Label>
-            <SidebarTrigger className="h-7 w-7 rounded-md border bg-white/70 text-stone-700 hover:bg-white" title="履歴を閉じる" aria-label="履歴を閉じる" />
+          <SidebarInput placeholder="検索…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {[
+              {key:'all', label:'すべて'},
+              {key:'prep', label:'PREP'},
+              {key:'sds', label:'SDS'},
+              {key:'desc', label:'DESC'},
+            ].map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setKind(opt.key)}
+                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs transition-colors ${kind===opt.key ? 'bg-primary text-primary-foreground border-primary' : 'bg-background/80 text-foreground hover:bg-muted border-border'}`}
+                aria-pressed={kind===opt.key}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-        </div>
-        <SidebarInput placeholder="検索…" value={query} onChange={(e) => setQuery(e.target.value)} />
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          {[
-            {key:'all', label:'すべて'},
-            {key:'prep', label:'PREP'},
-            {key:'sds', label:'SDS'},
-            {key:'desc', label:'DESC'},
-          ].map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setKind(opt.key)}
-              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs transition-colors ${kind===opt.key ? 'bg-primary text-primary-foreground border-primary' : 'bg-background/80 text-foreground hover:bg-muted border-border'}`}
-              aria-pressed={kind===opt.key}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup className="px-0">
-          <SidebarGroupContent>
-            {infiniteList.render}
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup className="px-0">
+            <SidebarGroupContent>
+              {infiniteList.render}
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+      {/* Mobile floating open button */}
+      <OpenSidebarTrigger side={props.side || 'right'} />
+    </>
+  )
+}
+
+function OpenSidebarTrigger({ side = 'right' }) {
+  const { open, toggleSidebar } = useSidebar()
+  if (open) return null
+  const sidePos = side === 'right' ? 'right-4' : 'left-4'
+  return (
+    <div className={`fixed ${sidePos} bottom-5 z-40 md:hidden`}>
+      <SidebarTrigger
+        onClick={toggleSidebar}
+        className="h-10 w-10 rounded-full border bg-white shadow-lg text-stone-700 hover:bg-stone-50"
+        title="履歴を開く"
+        aria-label="履歴を開く"
+      />
+    </div>
   )
 }
 
@@ -109,13 +136,8 @@ const ReviewItem = ({ item, dense = false, isActive = false }) => {
   const scoreObj = item?.result?.score_analysis?.score || null
   const scoreValues = scoreObj ? ["structure","logic","concreteness","clarity"].map(k => scoreObj?.[k]).filter(v => typeof v === 'number') : []
   const avgScore = scoreValues.length ? Math.round((scoreValues.reduce((a,b)=>a+b,0)/scoreValues.length)*10)/10 : null
-  const scoreClass = avgScore == null
-    ? "bg-gray-100 text-gray-600 border-gray-200"
-    : avgScore >= 4
-      ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-      : avgScore >= 3
-        ? "bg-amber-100 text-amber-700 border-amber-200"
-        : "bg-rose-100 text-rose-700 border-rose-200"
+  // Use theme-neutral chip (avoid strong colors)
+  const scoreClass = "bg-secondary text-foreground/70 border-border"
   return (
     <Link
       to={`/app/reviews/${item.id}`}

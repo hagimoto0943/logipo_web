@@ -74,7 +74,6 @@ export function StructureAnalysisChart({ structure, scores, title, description, 
     <div className="bg-white rounded-lg border">
       <CardHeader className="items-center">
         <div className="flex items-center gap-2">
-          <CardTitle className="text-md font-semibold text-stone-600">{title}</CardTitle>
           {description && (
             <Popover>
               <PopoverTrigger>
@@ -92,7 +91,7 @@ export function StructureAnalysisChart({ structure, scores, title, description, 
           {canRender ? (
             <RadarChart
               height={250}
-              series={[{ data, fillArea: true, color: "hsl(var(--chart-5))" }]}
+              series={[{ data, fillArea: true, color: "hsl(var(--primary))" }]}
               radar={{ metrics: labels, max: 5 }}
             />
           ) : (
