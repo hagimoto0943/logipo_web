@@ -1,7 +1,6 @@
 import { ContentListSidebar } from "@components/app/ContentListSidebar";
 import { SidebarProvider } from "@components/ui/sidebar"
 import { ScoreAnalysisChart } from "@components/app/ScoreAnalysisChart";
-import { S } from "dist/_worker.js/chunks/index_Cwj0YgIl.mjs";
 
 export default function Test() {
   return (

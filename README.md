@@ -52,9 +52,13 @@ Feel free to check [our documentation](https://docs.astro.build) or jump into ou
 yarn install
 ```
 
-- build env
+- build and dev
 ```sh
 yarn run dev
+```
+
+```sh
+yarn run build
 ```
 
 - import shadcn components
@@ -64,9 +68,9 @@ npx shadcn@latest add button
 
 ## Deploy
 
-- build 
+- build production
 ```sh
-yarn run build
+yarn run build:production
 ```
 
 - deploy for cloudflare pages
