@@ -9,8 +9,10 @@ import Test from "./routes/test";
 import Reviews from "./routes/activity/reviews";
 import ReviewDetail from "./routes/activity/reviews/[id]";
 import ReviewNew from "./routes/activity/reviews/new";
-import Account from "./routes/account";
-import Activation from "./routes/activation";
+import AccountLayout from "./routes/account/layout";
+import AccountOverview from "./routes/account/index";
+import AccountActivation from "./routes/account/activation";
+import ActivationRedirect from "./routes/activation";
 
 const router = createBrowserRouter([
   {
@@ -24,8 +26,15 @@ const router = createBrowserRouter([
       { path: "training", element: <Training /> },
       { path: "dashboard", element: <Dashboard /> },
       { path: "test", element: <Test /> },
-      { path: "account", element: <Account /> },
-      { path: "activation", element: <Activation /> },
+      { path: "activation", element: <ActivationRedirect /> },
+      {
+        path: "account",
+        element: <AccountLayout />,
+        children: [
+          { index: true, element: <AccountOverview /> },
+          { path: "activation", element: <AccountActivation /> },
+        ],
+      },
     ],
   },
 ]);

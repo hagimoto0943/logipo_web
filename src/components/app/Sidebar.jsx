@@ -10,7 +10,7 @@ export function AppSidebar({
   ...props
 }) {
   const location = useLocation()
-  const { me, isLoading, signOut } = useSession()
+  const { me, isLoading, isHydrated, signOut } = useSession()
 
   const navItems = useMemo(() => {
     const pathname = location.pathname || ""
@@ -54,7 +54,7 @@ export function AppSidebar({
     })
   }, [location.pathname])
 
-  const userForNav = me || { status: "guest" }
+  const userForNav = me ?? { status: "guest" }
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -63,7 +63,7 @@ export function AppSidebar({
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={userForNav} onLogout={signOut} isLoading={isLoading} />
+        <NavUser user={userForNav} onLogout={signOut} isLoading={isLoading} isHydrated={isHydrated} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

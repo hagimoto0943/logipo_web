@@ -5,8 +5,9 @@ import AuthApi from '../api/base/auth.js'
 const SessionContext = createContext(undefined)
 
 export const SessionProvider = ({ children }) => {
-  const [me, setMe] = useState(null)
+  const [me, setMe] = useState(undefined)
   const [isLoading, setIsLoading] = useState(true)
+  const [isHydrated, setIsHydrated] = useState(false)
   const [error, setError] = useState(null)
   const meApi = useMemo(() => new MeApi(), [])
   const authApi = useMemo(() => new AuthApi(), [])
@@ -27,6 +28,7 @@ export const SessionProvider = ({ children }) => {
       setError(err?.message || '現在のユーザー情報を取得できませんでした')
     } finally {
       setIsLoading(false)
+      setIsHydrated(true)
     }
   }, [meApi, extractUser])
 
@@ -35,7 +37,8 @@ export const SessionProvider = ({ children }) => {
     try {
       const payload = await authApi.signUp(formValues)
       const user = extractUser(payload)
-      if (user) setMe(user)
+      if (user !== undefined) setMe(user)
+      setIsHydrated(true)
       return payload
     } catch (err) {
       setError(err?.message || '会員登録に失敗しました')
@@ -48,7 +51,8 @@ export const SessionProvider = ({ children }) => {
     try {
       const payload = await authApi.signIn(credentials)
       const user = extractUser(payload)
-      if (user) setMe(user)
+      if (user !== undefined) setMe(user)
+      setIsHydrated(true)
       return payload
     } catch (err) {
       setError(err?.message || 'ログインに失敗しました')
@@ -72,7 +76,8 @@ export const SessionProvider = ({ children }) => {
     try {
       const payload = await authApi.activate(token)
       const user = extractUser(payload)
-      if (user) setMe(user)
+      if (user !== undefined) setMe(user)
+      setIsHydrated(true)
       return payload
     } catch (err) {
       setError(err?.message || 'メール確認に失敗しました')
@@ -97,6 +102,7 @@ export const SessionProvider = ({ children }) => {
   const contextValue = useMemo(() => ({
     me,
     isLoading,
+    isHydrated,
     error,
     refetch: fetchMe,
     signUp,
@@ -104,7 +110,7 @@ export const SessionProvider = ({ children }) => {
     signOut,
     activateEmail,
     resendActivation,
-  }), [me, isLoading, error, fetchMe, signUp, signIn, signOut, activateEmail, resendActivation])
+  }), [me, isLoading, isHydrated, error, fetchMe, signUp, signIn, signOut, activateEmail, resendActivation])
 
   return (
     <SessionContext.Provider value={contextValue}>
