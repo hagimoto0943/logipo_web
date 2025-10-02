@@ -32,14 +32,20 @@ const { title = "Logipop", showAuth = true } = Astro.props;
 
     {showAuth && (
       <div class="flex items-center space-x-4">
-        <a 
-          href="/app/account" 
+        <a
+          href="/login"
           class="text-sm font-medium hover:text-primary transition-colors"
         >
           ログイン
         </a>
-        <a 
-          href="/app" 
+        <a
+          href="/sign-up"
+          class="inline-flex items-center justify-center rounded-md border border-primary/50 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+        >
+          会員登録
+        </a>
+        <a
+          href="/app"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"
         >
           アプリを開く
@@ -72,8 +78,11 @@ const { title = "Logipop", showAuth = true } = Astro.props;
       </a>
       {showAuth && (
         <div class="pt-4 border-t space-y-2">
-          <a href="/app/account" class="block py-2 text-sm font-medium hover:text-primary transition-colors">
+          <a href="/login" class="block py-2 text-sm font-medium hover:text-primary transition-colors">
             ログイン
+          </a>
+          <a href="/sign-up" class="block py-2 text-sm font-medium hover:text-primary transition-colors">
+            会員登録
           </a>
           <a href="/app" class="block py-2 text-sm font-medium text-primary">
             アプリを開く

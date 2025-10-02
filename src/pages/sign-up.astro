@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
-import loginScript from "../scripts/login-form.js?url";
+import signUpScript from "../scripts/sign-up-form.js?url";
 
 const apiBase = import.meta.env.PUBLIC_API_URL || "";
 const url = new URL(Astro.request.url);
@@ -25,33 +25,33 @@ if (apiBase) {
       }
     }
   } catch (_err) {
-    // ignore network errors and show login page
+    // ignore network errors and render sign-up page
   }
 }
 ---
 
-<Layout title="ログイン | Logipop" showAuth={false}>
+<Layout title="会員登録 | Logipop" showAuth={false}>
   <section class="relative overflow-hidden bg-gradient-to-br from-background via-background to-primary/10 py-20">
     <div class="container relative z-10 mx-auto grid max-w-5xl gap-10 px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:px-8">
       <div class="space-y-6">
         <p class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1 text-xs text-muted-foreground">
           <span class="h-2 w-2 rounded-full bg-primary"></span>
-          会員の皆さまへ
+          新しいアカウントを作成
         </p>
         <div class="space-y-3">
-          <h1 class="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">ログイン</h1>
+          <h1 class="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">会員登録</h1>
           <p class="text-sm text-muted-foreground">
-            登録済みのメールアドレスとパスワードでサインインして、学習データや添削履歴を引き続きご利用いただけます。
+            メールアドレスとパスワードを設定して、学習履歴や添削データを保存しましょう。登録後は確認メールを送信しますので、メールボックスをご確認ください。
           </p>
         </div>
         <div class="rounded-2xl border border-border/60 bg-background/70 p-6 shadow-sm">
-          <h2 class="text-sm font-semibold text-foreground">初めての方へ</h2>
+          <h2 class="text-sm font-semibold text-foreground">すでにアカウントをお持ちの場合</h2>
           <p class="mt-2 text-sm text-muted-foreground">
-            アカウントをお持ちでない場合は、会員登録ページから新規アカウントを作成してください。登録は数分で完了します。
+            登録済みの方はログインページからサインインしてください。学習データがそのまま引き継がれます。
           </p>
           <div class="mt-4 flex flex-wrap gap-3">
-            <a class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition hover:bg-primary/90" href={`/sign-up?redirect=${redirectEncoded}`}>
-              会員登録へ
+            <a class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition hover:bg-primary/90" href={`/login?redirect=${redirectEncoded}`}>
+              ログインページへ
             </a>
             <a class="inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted" href="/">
               トップに戻る
@@ -64,15 +64,15 @@ if (apiBase) {
         <div class="absolute -inset-6 -z-10 rounded-3xl bg-gradient-to-br from-primary/20 via-background to-background blur-3xl" aria-hidden="true"></div>
         <div class="rounded-3xl border border-border/60 bg-background/95 p-8 shadow-2xl">
           <form
-            id="login-form"
+            id="sign-up-form"
             class="space-y-6"
             autocomplete="on"
             data-redirect={redirectEncoded}
           >
             <div class="space-y-1">
-              <label for="login-email" class="text-sm font-medium text-foreground">メールアドレス</label>
+              <label for="sign-up-email" class="text-sm font-medium text-foreground">メールアドレス</label>
               <input
-                id="login-email"
+                id="sign-up-email"
                 name="email"
                 type="email"
                 required
@@ -81,13 +81,24 @@ if (apiBase) {
               />
             </div>
             <div class="space-y-1">
-              <label for="login-password" class="text-sm font-medium text-foreground">パスワード</label>
+              <label for="sign-up-password" class="text-sm font-medium text-foreground">パスワード</label>
               <input
-                id="login-password"
+                id="sign-up-password"
                 name="password"
                 type="password"
-                required
                 minlength="8"
+                required
+                class="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div class="space-y-1">
+              <label for="sign-up-password-confirmation" class="text-sm font-medium text-foreground">パスワード（確認）</label>
+              <input
+                id="sign-up-password-confirmation"
+                name="password_confirmation"
+                type="password"
+                minlength="8"
+                required
                 class="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
               />
             </div>
@@ -96,23 +107,23 @@ if (apiBase) {
               type="submit"
               class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow transition hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-60"
             >
-              ログイン
+              会員登録
             </button>
-         </form>
+          </form>
           <div class="mt-4 space-y-2 text-center text-xs text-muted-foreground">
             <p>
-              メールが届かない場合は迷惑メールフォルダをご確認いただくか、確認メールを再送してください。
+              登録後に確認メールが届かない場合は迷惑メールフォルダをご確認ください。24時間以内にリンクの有効期限が切れた場合でも再送できます。
             </p>
             <p>
-              ログインせずに試してみたい方は
+              まずはゲストとして操作感を知りたい方は
               <a
                 href="/app"
                 data-link="guest-demo"
                 class="font-medium text-primary underline-offset-4 hover:underline"
               >
-                ゲストモードを開く
+                ゲストモードで体験
               </a>
-              から体験いただけます。
+              をどうぞ。
             </p>
           </div>
         </div>
@@ -121,4 +132,4 @@ if (apiBase) {
   </section>
 </Layout>
 
-<script type="module" src={loginScript}></script>
+<script type="module" src={signUpScript}></script>
