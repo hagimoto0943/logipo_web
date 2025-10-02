@@ -2,11 +2,9 @@
 
 import {
   BadgeCheck,
-  Bell,
   ChevronsUpDown,
-  CreditCard,
   LogOut,
-  Sparkles,
+  UserRoundCog,
 } from "lucide-react"
 
 import {
@@ -31,9 +29,27 @@ import {
 } from "@components/ui/sidebar"
 
 export function NavUser({
-  user
+  user,
+  onLogout,
+  isLoading,
 }) {
   const { isMobile } = useSidebar()
+  const displayName = user?.name || user?.email?.split("@")?.[0] || "Guest"
+  const displayEmail = user?.email || "guest@logipo"
+  const status = user?.status || "guest"
+
+  const initials = displayName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
+
+  const handleLogout = (event) => {
+    event.preventDefault()
+    if (!onLogout || isLoading) return
+    Promise.resolve(onLogout()).catch(() => {})
+  }
 
   return (
     <SidebarMenu>
@@ -44,12 +60,12 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                {user?.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
+                <AvatarFallback className="rounded-lg">{initials || "G"}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate font-semibold">{displayName}</span>
+                <span className="truncate text-xs">{displayEmail}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -62,41 +78,33 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  {user?.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
+                  <AvatarFallback className="rounded-lg">{initials || "G"}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate font-semibold">{displayName}</span>
+                  <span className="truncate text-xs">{displayEmail}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
+              <DropdownMenuItem onSelect={() => { window.location.href = "/app/account" }}>
+                <UserRoundCog />
+                アカウント設定
               </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
                 <BadgeCheck />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
+                <span className="flex-1">ステータス: {status}</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={handleLogout}
+              className={isLoading ? "opacity-50 pointer-events-none" : ""}
+            >
               <LogOut />
-              Log out
+              ログアウト
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

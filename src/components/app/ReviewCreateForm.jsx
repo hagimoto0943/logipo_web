@@ -5,10 +5,10 @@ import { Button } from "@components/ui/button"
 import ReviewApi from "@api/base/review"
 
 const STRUCTURE_OPTIONS = [
-  { value: "prep", label: "PREP（主張-理由-例-再主張）" },
-  { value: "sds", label: "SDS（要点-詳細-結論）" },
-  { value: "desc", label: "DESC（描写-説明-提案-選択）" },
-  { value: "free", label: "FREE（自由）" },
+  { value: "prep", label: "PREP" },
+  { value: "sds", label: "SDS" },
+  { value: "desc", label: "DESC" },
+  { value: "free", label: "FREE" },
 ]
 
 export default function ReviewCreateForm({ onCreated }) {
