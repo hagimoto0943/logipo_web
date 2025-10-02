@@ -9,6 +9,8 @@ import Test from "./routes/test";
 import Reviews from "./routes/activity/reviews";
 import ReviewDetail from "./routes/activity/reviews/[id]";
 import ReviewNew from "./routes/activity/reviews/new";
+import Account from "./routes/account";
+import Activation from "./routes/activation";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +24,8 @@ const router = createBrowserRouter([
       { path: "training", element: <Training /> },
       { path: "dashboard", element: <Dashboard /> },
       { path: "test", element: <Test /> },
+      { path: "account", element: <Account /> },
+      { path: "activation", element: <Activation /> },
     ],
   },
 ]);

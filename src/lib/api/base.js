@@ -31,10 +31,30 @@ export default class Base {
       body,
     })
 
+    const isJson = response.headers?.get('content-type')?.includes('application/json')
+
     if (!response.ok) {
-      throw new Error(`${response.status} ${response.statusText}`);
+      let message = `${response.status} ${response.statusText}`
+      if (isJson) {
+        try {
+          const errorPayload = await response.json()
+          message = errorPayload?.message || message
+        } catch (_) {
+          // ignore parse errors and fallback to default message
+        }
+      }
+
+      const error = new Error(message)
+      error.status = response.status
+      throw error
     }
 
-    return response.json()
+    if (response.status === 204) return null
+
+    if (isJson) {
+      return response.json()
+    }
+
+    return response.text()
   }
 }
