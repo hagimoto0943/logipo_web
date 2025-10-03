@@ -33,6 +33,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@components/ui/sidebar"
+import { queueFlash, showFlash } from "../../scripts/flash-messages.js"
 
 export function NavUser({
   user,
@@ -64,7 +65,15 @@ export function NavUser({
   const handleLogout = (event) => {
     event.preventDefault()
     if (!onLogout || isPending) return
-    Promise.resolve(onLogout()).catch(() => {})
+    Promise.resolve(onLogout())
+      .then(() => {
+        queueFlash("ログアウトしました", { variant: "success" })
+        window.location.href = "/login"
+      })
+      .catch((err) => {
+        const message = err?.message || "ログアウトに失敗しました"
+        showFlash(message, { variant: "error" })
+      })
   }
 
   if (isGuest) {
