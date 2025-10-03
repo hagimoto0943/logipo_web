@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
-import signUpScript from "../scripts/sign-up-form.js?url";
+import SignUpFormClient from "../components/scripts/SignUpFormClient.jsx";
 
 const apiBase = import.meta.env.PUBLIC_API_URL || "";
 const url = new URL(Astro.request.url);
@@ -132,4 +132,4 @@ if (apiBase) {
   </section>
 </Layout>
 
-<script type="module" src={signUpScript}></script>
+<SignUpFormClient client:load />

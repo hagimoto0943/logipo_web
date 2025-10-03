@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
-import loginScript from "../scripts/login-form.js?url";
+import LoginFormClient from "../components/scripts/LoginFormClient.jsx";
 
 const apiBase = import.meta.env.PUBLIC_API_URL || "";
 const url = new URL(Astro.request.url);
@@ -121,4 +121,4 @@ if (apiBase) {
   </section>
 </Layout>
 
-<script type="module" src={loginScript}></script>
+<LoginFormClient client:load />

@@ -1,8 +1,8 @@
-import AuthApi from "@lib/api/base/auth.js";
+import AuthApi from "../lib/api/base/auth.js";
 
 let authApi = null;
 
-const initSignUpForm = () => {
+export const initSignUpForm = () => {
   const form = document.querySelector("#sign-up-form");
   if (!form) return;
 
@@ -71,8 +71,4 @@ const initSignUpForm = () => {
   }
 };
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initSignUpForm, { once: true });
-} else {
-  initSignUpForm();
-}
+export default initSignUpForm;
