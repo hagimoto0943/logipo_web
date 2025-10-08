@@ -24,4 +24,23 @@ export default class AuthApi extends Base {
   resendActivation() {
     return this.fetch("/auth/activations/resend", { method: "POST" })
   }
+
+  requestPasswordReset(payload) {
+    return this.fetch("/reset_password_requests", {
+      method: "POST",
+      body: payload,
+    })
+  }
+
+  resetPassword({ token, password, password_confirmation }) {
+    const search = token ? `?token=${encodeURIComponent(token)}` : ""
+    return this.fetch(`/reset_password${search}`, {
+      method: "PUT",
+      body: {
+        token,
+        password,
+        password_confirmation,
+      },
+    })
+  }
 }
