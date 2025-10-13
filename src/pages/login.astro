@@ -5,14 +5,12 @@ import Layout from "../layouts/Layout.astro";
 import LoginFormClient from "../components/scripts/LoginFormClient.jsx";
 import GoogleOAuthClient from "../components/scripts/GoogleOAuthClient.jsx";
 
-const apiBase = import.meta.env.PUBLIC_API_URL || "";
+const apiBase = import.meta.env.PUBLIC_BASE_URL || "";
 const googleClientId = import.meta.env.GOOGLE_OAUTH_CLIENT_ID || "";
 const url = new URL(Astro.request.url);
 const redirectParam = url.searchParams.get("redirect") ?? "/app/account";
 const redirectEncoded = encodeURIComponent(redirectParam);
-const googleRedirectUri = apiBase
-  ? `${apiBase.replace(/\/$/, "")}/auth/google_oauth_callback`
-  : "";
+const googleRedirectUri = `${url.origin}/auth/google_oauth_callback`;
 const googleOAuthUrl = (() => {
   if (!googleClientId || !googleRedirectUri) return "";
   const params = new URLSearchParams({
