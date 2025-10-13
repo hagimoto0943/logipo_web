@@ -1,0 +1,248 @@
+---
+export const prerender = false;
+
+const apiBase = import.meta.env.PUBLIC_API_URL || "";
+const url = new URL(Astro.request.url);
+const params = url.searchParams;
+
+const code = params.get("code") ?? "";
+const state = params.get("state") ?? "";
+const scope = params.get("scope") ?? "";
+const authuser = params.get("authuser") ?? "";
+const prompt = params.get("prompt") ?? "";
+
+const sanitizeRedirect = (value) => {
+  if (!value) return "/app/account";
+  const trimmed = value.trim();
+  if (!trimmed) return "/app/account";
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const targetUrl = new URL(trimmed);
+      if (targetUrl.origin === url.origin) {
+        return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}` || "/app/account";
+      }
+    } catch (_err) {
+      // ignore malformed URLs
+    }
+    return "/app/account";
+  }
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+};
+
+const redirectTarget = sanitizeRedirect(state);
+const loginFallback = `/login?redirect=${encodeURIComponent(redirectTarget)}`;
+
+const postTarget = apiBase ? `${apiBase.replace(/\/$/, "")}/auth/google_oauth` : "";
+const shouldAutoSubmit = Boolean(postTarget && code);
+---
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Googleアカウント連携中… | Logipop</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body style="font-family: system-ui, sans-serif; background: #f5f5f5; color: #1f2933; margin: 0; padding: 0;">
+    <main style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;">
+      <div
+        style="max-width: 420px; width: 100%; background: #fff; border-radius: 16px; box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08); padding: 32px; text-align: center;"
+        data-oauth-container
+        data-auto-submit={shouldAutoSubmit ? "true" : "false"}
+        data-post-target={postTarget || undefined}
+        data-redirect-target={redirectTarget}
+        data-login-fallback={loginFallback}
+      >
+        {shouldAutoSubmit ? (
+          <>
+            <h1 style="font-size: 20px; margin-bottom: 12px;">Googleアカウントを確認しています</h1>
+            <p data-status-message style="font-size: 14px; line-height: 1.6; color: #475467; margin-bottom: 24px;">
+              画面が自動的に切り替わります。切り替わらない場合は、下のボタンをクリックしてください。
+            </p>
+            <form id="google-oauth-post" action={postTarget || undefined} method="post" style="display: none;">
+              <input type="hidden" name="code" value={code} />
+              <input type="hidden" name="state" value={state} />
+              <input type="hidden" name="scope" value={scope} />
+              <input type="hidden" name="authuser" value={authuser} />
+              <input type="hidden" name="prompt" value={prompt} />
+            </form>
+            <button
+              type="button"
+              data-submit-button
+              style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 600; color: #155eef; background: #eef2ff; border-radius: 999px; padding: 10px 20px; border: none; cursor: pointer;"
+            >
+              連携処理を続行
+            </button>
+            <p style="margin-top: 16px; font-size: 12px; color: #98a2b3;">このタブは処理完了後に閉じていただけます。</p>
+            <noscript>
+              <p style="margin-top: 16px; font-size: 12px; color: #ef4444;">
+                JavaScriptが無効になっています。表示されているボタンをクリックして手動で続行してください。
+              </p>
+            </noscript>
+          </>
+        ) : (
+          <>
+            <h1 style="font-size: 20px; margin-bottom: 12px;">Google認証を完了できませんでした</h1>
+            <p style="font-size: 14px; line-height: 1.6; color: #475467;">
+              必要な情報が不足している可能性があります。ブラウザの戻るボタンでログインページに戻り、再度お試しください。
+            </p>
+            <a
+              href={loginFallback}
+              style="display: inline-flex; align-items: center; justify-content: center; margin-top: 20px; font-size: 14px; font-weight: 600; color: #155eef;"
+            >
+              ログインページへ戻る
+            </a>
+          </>
+        )}
+      </div>
+    </main>
+  </body>
+  <script type="module">
+    const container = document.querySelector('[data-oauth-container]');
+    const statusEl = container?.querySelector('[data-status-message]');
+    const submitButton = container?.querySelector('[data-submit-button]');
+    const form = document.getElementById('google-oauth-post');
+
+    const autoSubmit = container?.dataset?.autoSubmit === 'true';
+    const postTarget = container?.dataset?.postTarget || '';
+    const redirectTarget = container?.dataset?.redirectTarget || '/app/account';
+    const loginFallback = container?.dataset?.loginFallback || '/login';
+
+    const colorMap = {
+      muted: '#475467',
+      success: '#166534',
+      error: '#b42318',
+    };
+
+    const resolveRedirect = (target) => {
+      if (!target) return '/app/account';
+      if (/^https?:\/\//i.test(target)) return target;
+      return target.startsWith('/') ? target : `/${target}`;
+    };
+
+    const updateStatus = (message, variant = 'muted') => {
+      if (!statusEl) return;
+      statusEl.textContent = message;
+      statusEl.style.color = colorMap[variant] || colorMap.muted;
+    };
+
+    const toggleLoading = (isLoading) => {
+      if (!submitButton) return;
+      submitButton.disabled = isLoading;
+      submitButton.style.opacity = isLoading ? '0.6' : '';
+      submitButton.style.cursor = isLoading ? 'not-allowed' : 'pointer';
+    };
+
+    const FLASH_STORAGE_KEY = '__logipop_flash_queue__';
+
+    const pushFlash = (message, variant = 'muted', duration = 4000) => {
+      if (!message) return;
+      try {
+        const existing = window.sessionStorage.getItem(FLASH_STORAGE_KEY);
+        const queue = existing ? JSON.parse(existing) : [];
+        const payload = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+          message,
+          variant,
+          duration,
+        };
+        queue.push(payload);
+        window.sessionStorage.setItem(FLASH_STORAGE_KEY, JSON.stringify(queue));
+      } catch (error) {
+        console.error('Failed to queue flash message', error);
+      }
+    };
+
+    const redirectWithFlash = (url, message, variant) => {
+      if (message) pushFlash(message, variant);
+      window.location.assign(url);
+    };
+
+    const handleFailure = (message) => {
+      updateStatus(`${message}。ログインページに戻ります。`, 'error');
+      window.setTimeout(() => {
+        redirectWithFlash(loginFallback, message, 'error');
+      }, 600);
+    };
+
+    const submitOAuth = async () => {
+      if (!form || !postTarget) {
+        updateStatus('必要な情報が不足しています。ログインページに戻ります。', 'error');
+        handleFailure('Google連携に失敗しました');
+        return;
+      }
+
+      try {
+        toggleLoading(true);
+        updateStatus('ログイン処理を完了しています…', 'muted');
+
+        const formData = new FormData(form);
+        const payload = new URLSearchParams();
+        formData.forEach((value, key) => {
+          if (typeof value === 'string') {
+            payload.append(key, value);
+          }
+        });
+
+        const response = await fetch(postTarget, {
+          method: 'POST',
+          body: payload,
+          credentials: 'include',
+          headers: {
+            Accept: 'application/json',
+          },
+        });
+
+        let data = null;
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          data = await response.json().catch(() => null);
+        } else {
+          await response.text().catch(() => null);
+        }
+
+        if (!response.ok) {
+          const errorMessage = data?.message || 'Google連携に失敗しました';
+          throw new Error(errorMessage);
+        }
+
+        const successMessage = data?.message || 'ログインしました';
+        updateStatus('ログインに成功しました。画面を切り替えています…', 'success');
+        window.setTimeout(() => {
+          redirectWithFlash(resolveRedirect(redirectTarget), successMessage, 'success');
+        }, 400);
+      } catch (error) {
+        const message = error?.message || 'Google連携に失敗しました';
+        handleFailure(message);
+      } finally {
+        toggleLoading(false);
+      }
+    };
+
+    if (submitButton) {
+      submitButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        submitOAuth();
+      });
+    }
+
+    const triggerAutoSubmit = () => {
+      window.setTimeout(() => {
+        submitOAuth();
+      }, 120);
+    };
+
+    if (autoSubmit) {
+      if (document.readyState === 'complete') {
+        triggerAutoSubmit();
+      } else {
+        window.addEventListener('load', triggerAutoSubmit, { once: true });
+      }
+    }
+
+    if (!postTarget && statusEl) {
+      updateStatus('サーバー設定が不足しているため、Google連携を完了できませんでした。', 'error');
+      if (submitButton) submitButton.disabled = true;
+    }
+  </script>
+</html>

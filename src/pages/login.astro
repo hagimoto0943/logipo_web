@@ -3,11 +3,30 @@ export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
 import LoginFormClient from "../components/scripts/LoginFormClient.jsx";
+import GoogleOAuthClient from "../components/scripts/GoogleOAuthClient.jsx";
 
-const apiBase = import.meta.env.PUBLIC_API_URL || "";
+const apiBase = import.meta.env.PUBLIC_BASE_URL || "";
+const googleClientId = import.meta.env.GOOGLE_OAUTH_CLIENT_ID || "";
 const url = new URL(Astro.request.url);
 const redirectParam = url.searchParams.get("redirect") ?? "/app/account";
 const redirectEncoded = encodeURIComponent(redirectParam);
+const googleRedirectUri = `${url.origin}/auth/google_oauth_callback`;
+const googleOAuthUrl = (() => {
+  if (!googleClientId || !googleRedirectUri) return "";
+  const params = new URLSearchParams({
+    client_id: googleClientId,
+    redirect_uri: googleRedirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    access_type: "offline",
+    prompt: "consent",
+    state: redirectParam,
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+})();
+const googleButtonBaseClass =
+  "w-full inline-flex items-center justify-center gap-3 rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f7f8f8]";
+const googleButtonClass = `${googleButtonBaseClass}${googleOAuthUrl ? "" : " cursor-not-allowed opacity-60"}`;
 
 if (apiBase) {
   const cookie = Astro.request.headers.get("cookie") ?? "";
@@ -63,9 +82,35 @@ if (apiBase) {
       <div class="relative">
         <div class="absolute -inset-6 -z-10 rounded-3xl bg-gradient-to-br from-primary/20 via-background to-background blur-3xl" aria-hidden="true"></div>
         <div class="rounded-3xl border border-border/60 bg-background/95 p-8 shadow-2xl">
+          <div class="space-y-4">
+            <button
+              type="button"
+              class={googleButtonClass}
+              data-google-auth-url={googleOAuthUrl || undefined}
+              disabled={!googleOAuthUrl}
+            >
+              <span class="inline-flex items-center justify-center">
+                <img
+                  src="/google-icon.svg"
+                  alt=""
+                  width="18"
+                  height="18"
+                  class="h-[18px] w-[18px]"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </span>
+              <span class="tracking-tight">Googleでログイン</span>
+            </button>
+            <div class="relative flex items-center">
+              <span class="flex-1 border-t border-border"></span>
+              <span class="px-3 text-xs text-muted-foreground">またはメールアドレスでログイン</span>
+              <span class="flex-1 border-t border-border"></span>
+            </div>
+          </div>
           <form
             id="login-form"
-            class="space-y-6"
+            class="mt-6 space-y-6"
             autocomplete="on"
             data-redirect={redirectEncoded}
           >
@@ -102,7 +147,7 @@ if (apiBase) {
             >
               ログイン
             </button>
-         </form>
+          </form>
           <div class="mt-4 space-y-2 text-center text-xs text-muted-foreground">
             <p>
               メールが届かない場合は迷惑メールフォルダをご確認いただくか、確認メールを再送してください。
@@ -126,3 +171,4 @@ if (apiBase) {
 </Layout>
 
 <LoginFormClient client:load />
+<GoogleOAuthClient client:load />
