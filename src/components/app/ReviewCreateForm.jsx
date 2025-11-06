@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { Button } from "@components/ui/button"
 import { AlertCircle, Send } from "lucide-react"
 import ReviewApi from "@api/base/review"
+import { cn } from "@lib/utils"
 
 const STRUCTURE_OPTIONS = [
   { value: "prep", label: "PREP" },
@@ -77,57 +78,85 @@ export default function ReviewCreateForm({
   }
 
   return (
-    <form className={`space-y-3 ${className}`} onSubmit={handleSubmit}>
-      <div className="group rounded-3xl border border-border/60 bg-background/90 shadow-sm transition-all focus-within:border-primary/50 focus-within:shadow-lg focus-within:ring-1 focus-within:ring-primary/20">
-        {!hideStructure && structureOptions?.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 border-b border-border/40 px-4 py-3">
-            {structureOptions.map(opt => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setStructureKind(opt.value)}
-                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition ${
-                  structureKind === opt.value
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-                aria-pressed={structureKind === opt.value}
-              >
-                {opt.label}
-              </button>
-            ))}
+    <div className={cn("space-y-4", className)}>
+      <form
+        onSubmit={handleSubmit}
+        className="relative overflow-hidden rounded-[28px] border-2 border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 shadow-[0_32px_60px_-40px_rgba(30,64,175,0.35)]"
+      >
+        <div className="pointer-events-none absolute -left-24 top-12 h-56 w-56 rounded-full bg-primary/10 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-emerald-100/30 blur-3xl" aria-hidden />
+
+        <div className="relative flex flex-col gap-6 px-6 py-6 sm:px-10 sm:py-8">
+          {!hideStructure && structureOptions?.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-sm">
+              {structureOptions.map((opt) => {
+                const isActive = structureKind === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setStructureKind(opt.value)}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                        : "bg-white/80 text-slate-600 hover:bg-slate-100"
+                    )}
+                    aria-pressed={isActive}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
+          <div className="relative overflow-hidden rounded-[22px] border border-slate-200/80 bg-white/85 shadow-inner">
+            <textarea
+              id="text"
+              className="min-h-[320px] w-full resize-none bg-transparent px-5 pb-20 pt-5 text-sm leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 focus:outline-none"
+              value={text}
+              onChange={(event) => {
+                setError("")
+                setText(event.target.value)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
+                  event.preventDefault()
+                  submitReview()
+                }
+              }}
+              placeholder={placeholder}
+            />
+            <div className="pointer-events-none absolute -left-24 top-24 h-56 w-56 rounded-full bg-primary/5 blur-3xl" aria-hidden />
+            <div className="pointer-events-none absolute -right-10 bottom-10 h-48 w-48 rounded-full bg-amber-100/30 blur-3xl" aria-hidden />
           </div>
-        )}
-        <div className="relative">
-          <textarea
-            id="text"
-            className="h-40 w-full resize-none border-0 bg-transparent px-4 pb-12 pt-4 text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0"
-            value={text}
-            onChange={(event) => {
-              setError("")
-              setText(event.target.value)
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
-                event.preventDefault()
-                submitReview()
-              }
-            }}
-            placeholder={placeholder}
-          />
-          <div className="absolute bottom-3 right-3">
-            <Button
-              type="submit"
-              size="icon"
-              className="rounded-full shadow-lg transition hover:scale-105"
-              disabled={!canSubmit}
-              aria-label={submitLabel}
-            >
-              <Send className="size-4" />
-            </Button>
+
+          <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-slate-700">{text.length}文字</span>
+                <span className="hidden sm:inline">Enter で送信 / Shift + Enter で改行</span>
+              </div>
+              <Button
+                type="submit"
+                disabled={!canSubmit}
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/30 hover:bg-primary/90 disabled:opacity-40"
+                aria-label={submitLabel}
+              >
+                <Send className="size-4" />
+                <span>{submitting ? "送信中…" : submitLabel}</span>
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white/70 px-4 py-3 text-[11px] text-slate-500">
+            <span className="font-medium text-slate-600">ヒント</span>
+            <span>構造に沿って段落を分けると、フィードバックがより具体的になります。</span>
+            <span>送信後は自動で添削が開始されます。</span>
           </div>
         </div>
-      </div>
+      </form>
 
       {error && (
         <div className="flex items-center gap-2 text-sm text-destructive" role="alert" aria-live="polite">
@@ -138,11 +167,18 @@ export default function ReviewCreateForm({
 
       {showFooterButton && (
         <div className="flex justify-end">
-          <Button type="submit" variant="outline" size="sm" disabled={!canSubmit} className="rounded-full">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!canSubmit}
+            className="rounded-full"
+            onClick={handleSubmit}
+          >
             {submitting ? "送信中…" : submitLabel}
           </Button>
         </div>
       )}
-    </form>
+    </div>
   )
 }

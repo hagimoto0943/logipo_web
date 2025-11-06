@@ -5,6 +5,7 @@ import { useIsMobile } from "@lib/api/hooks/use-mobile"
 import { Label } from "@components/ui/label"
 import { Switch } from "@components/ui/switch"
 import { History, Star } from "lucide-react"
+import { cn } from "@lib/utils"
 import { StructureKindBadge } from "@components/app/StructureKindBadge"
 import ReviewApi from "@api/base/review"
 import newInfiniteList from "@components/app/newInfiniteList"
@@ -50,31 +51,67 @@ export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collap
   const resolvedOverlay = overlay ?? isMobile
   const resolvedCollapsible = collapsible ?? "offcanvas"
 
+  const floatingCards = [
+    {
+      id: "card-1",
+      position: "top-3 right-4",
+      title: "ステータス更新",
+      date: "2024.03.18",
+      body: "田中さん：次回ミーティングの資料を共有しました！"
+    },
+    {
+      id: "card-2",
+      position: "bottom-2 left-3",
+      title: "共有メモ",
+      date: "2024.03.16",
+      body: "レビューアサインを更新しました。"
+    }
+  ]
+
   return (
     <>
       <Sidebar
         {...props}
-        className={`hidden md:flex ${className}`}
+        className={cn(
+          "hidden md:flex bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.15),transparent_55%),radial-gradient(circle_at_75%_15%,rgba(56,189,248,0.18),transparent_45%),linear-gradient(to_bottom,#f4f9ff,#ffffff_45%,#f0f9ff)] text-slate-800 shadow-[0_30px_60px_-45px_rgba(14,116,144,0.45)]",
+          "border-r border-sky-100/80",
+          className
+        )}
         collapsible={resolvedCollapsible}
         overlay={resolvedOverlay}
         style={{ "--sidebar-width": width }}
       >
-        <SidebarHeader className="gap-3.5 border-b p-4 sticky top-0 z-10 bg-gradient-to-b from-sidebar/95 to-sidebar/80 backdrop-blur supports-[backdrop-filter]:from-sidebar/70 supports-[backdrop-filter]:to-sidebar/60">
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-2 text-foreground text-neutral-700 font-bold">
-              <History className="h-4 w-4 text-muted-foreground" />
-              <span>添削履歴</span>
+        <SidebarHeader className="relative gap-4 overflow-hidden border-b border-sky-100/70 p-4 pb-6">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-100/80 via-transparent to-sky-200/40 backdrop-blur-sm" aria-hidden />
+          <div className="pointer-events-none absolute -left-20 top-12 h-48 w-48 rounded-full bg-sky-200/30 blur-3xl" aria-hidden />
+          <div className="pointer-events-none absolute -right-28 -top-24 h-64 w-64 rounded-full bg-cyan-300/25 blur-3xl" aria-hidden />
+
+          <div className="relative z-10 flex w-full items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-semibold text-sky-900">
+              <History className="h-4 w-4 text-cyan-600" />
+              <span className="tracking-wide">添削履歴</span>
             </div>
             <div className="flex items-center gap-2">
               <Label className="flex items-center gap-2 text-sm">
-                <span>Unreads</span>
-                <Switch className="shadow-none" />
+                <span className="text-xs font-medium text-sky-900/80">未読のみ</span>
+                <Switch className="shadow-none data-[state=checked]:bg-cyan-500" />
               </Label>
-              <SidebarTrigger className="h-7 w-7 rounded-md border bg-white/70 text-stone-700 hover:bg-white" title="履歴を閉じる" aria-label="履歴を閉じる" />
+              <SidebarTrigger className="h-8 w-8 rounded-full border border-sky-200 bg-white/80 text-cyan-600 shadow-sm backdrop-blur hover:bg-white" title="履歴を閉じる" aria-label="履歴を閉じる" />
             </div>
           </div>
-          <SidebarInput placeholder="検索…" value={query} onChange={(e) => setQuery(e.target.value)} />
-          <div className="flex flex-wrap items-center gap-2 pt-1">
+
+          <div className="relative z-10 space-y-3">
+            <div>
+              <h2 className="text-base font-semibold text-sky-900">チームの声を素早くキャッチ</h2>
+              <p className="mt-1 text-xs text-slate-500">検索やフィルターで、求めている添削履歴にすぐたどり着けます。</p>
+            </div>
+            <SidebarInput
+              placeholder="キーワードで検索…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="h-9 border-sky-100/80 bg-white/80 text-sm text-slate-700 placeholder:text-slate-400"
+            />
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
             {[
               {key:'all', label:'すべて'},
               {key:'prep', label:'PREP'},
@@ -84,15 +121,38 @@ export function ContentListSidebar({ width = "clamp(260px, 22vw, 360px)", collap
               <button
                 key={opt.key}
                 onClick={() => setKind(opt.key)}
-                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs transition-colors ${kind===opt.key ? 'bg-primary text-primary-foreground border-primary' : 'bg-background/80 text-foreground hover:bg-muted border-border'}`}
+                className={cn(
+                  "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors shadow-sm backdrop-blur",
+                  kind===opt.key
+                    ? "bg-cyan-500/90 text-white border-cyan-500"
+                    : "bg-white/70 text-slate-600 hover:bg-sky-50/90 border-sky-100/80"
+                )}
                 aria-pressed={kind===opt.key}
               >
                 {opt.label}
               </button>
             ))}
           </div>
+          </div>
+
+          <div className="pointer-events-none absolute inset-0">
+            {floatingCards.map(card => (
+              <div
+                key={card.id}
+                className={cn(
+                  "absolute w-48 rounded-2xl border border-white/60 bg-white/75 px-3 py-3 shadow-[0_15px_30px_-20px_rgba(14,116,144,0.45)] backdrop-blur-sm transition duration-700 ease-out",
+                  "ring-1 ring-white/50",
+                  card.position
+                )}
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500">{card.title}</span>
+                <span className="mt-0.5 block text-[9px] text-slate-400">{card.date}</span>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{card.body}</p>
+              </div>
+            ))}
+          </div>
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent className="bg-white/70 backdrop-blur-sm">
           <SidebarGroup className="px-0">
             <SidebarGroupContent>
               {infiniteList.render}

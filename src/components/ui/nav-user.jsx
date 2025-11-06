@@ -101,7 +101,7 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+              className="rounded-2xl border border-slate-200 bg-white/80 data-[state=open]:border-primary/40 data-[state=open]:bg-white data-[state=open]:shadow-md">
               <Avatar className="h-8 w-8 rounded-lg">
                 {!isPending && user?.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
                 <AvatarFallback className="rounded-lg">{initials || "G"}</AvatarFallback>
