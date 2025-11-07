@@ -114,10 +114,10 @@
     --sidebar-ring: 24.6 95% 53.1%;
 
     /* Brand tone variants (same hue as primary, different saturation/lightness) */
-    --tone-1: 24.6 95% 53.1%; /* primary */
-    --tone-2: 24.6 80% 58%;
-    --tone-3: 24.6 62% 66%;
-    --tone-4: 24.6 45% 76%;
+    --tone-1: 24.6 95% 53.1%; /* primary (元の鮮やかさに戻す) */
+    --tone-2: 24.6 85% 60%;   /* 少し明るく、鮮やかに */
+    --tone-3: 24.6 75% 67%;   /* さらに明るく、鮮やかに */
+    --tone-4: 24.6 65% 74%;   /* 明るく、鮮やかに */
   }
 
   .dark {
@@ -147,10 +147,10 @@
     --chart-5: 340 75% 55%;
 
     /* Brand tone variants for dark (adjusted lightness for contrast) */
-    --tone-1: 20.5 90.2% 48.2%; /* primary */
-    --tone-2: 20.5 80% 56%;
-    --tone-3: 20.5 70% 64%;
-    --tone-4: 20.5 60% 72%;
+    --tone-1: 20.5 90.2% 48.2%; /* primary (元の鮮やかさに戻す) */
+    --tone-2: 20.5 80% 55%;    /* 少し明るく、鮮やかに */
+    --tone-3: 20.5 70% 62%;    /* さらに明るく、鮮やかに */
+    --tone-4: 20.5 60% 69%;    /* 明るく、鮮やかに */
   }
 }
 

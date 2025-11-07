@@ -1,186 +1,376 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@components/ui/button';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { MobileFeedbackSheet } from '@components/app/MobileFeedbackSheet';
 
+const STRUCTURE_CONFIG = {
+  prep: [
+    { key: 'point', label: 'P', description: '文章の主張（Point）にあたる部分です。', colorVar: '--tone-1' },
+    { key: 'reason', label: 'R', description: '理由（Reason）を示す部分です。', colorVar: '--tone-2' },
+    { key: 'example', label: 'E', description: '具体例（Example）を示す部分です。', colorVar: '--tone-3' },
+    { key: 'repoint', label: 'P', description: '再主張（Re:point）を示す部分です。', colorVar: '--tone-4' },
+  ],
+  sds: [
+    { key: 'summary1', label: 'S', description: '要点（Summary）を示す部分です。', colorVar: '--chart-2' },
+    { key: 'details', label: 'D', description: '詳細（Details）を示す部分です。', colorVar: '--chart-3' },
+    { key: 'summary2', label: 'S', description: '要点（Summary）を示す部分です。', colorVar: '--chart-4' },
+  ],
+  desc: [
+    { key: 'describe', label: 'D', description: '描写（Describe）を示す部分です。', colorVar: '--chart-1' },
+    { key: 'express', label: 'E', description: '説明（Express）を示す部分です。', colorVar: '--chart-5' },
+    { key: 'suggest', label: 'S', description: '提案（Suggest）を示す部分です。', colorVar: '--chart-2' },
+    { key: 'choose', label: 'C', description: '選択（Choose）を示す部分です。', colorVar: '--chart-3' },
+  ],
+};
+
+const METHODS = [
+  { value: 'PREP', label: 'PREP' },
+  { value: 'SDS', label: 'SDS' },
+  { value: 'DESC', label: 'DESC' },
+  { value: 'FTBE', label: 'FTBE' },
+];
+
+const getKindMeta = (key, inferKind) => {
+  const kinds = STRUCTURE_CONFIG[inferKind?.toLowerCase()] || [];
+  return kinds.find((k) => k.key === key) || { colorVar: '--tone-1', label: key, description: '' };
+};
+
+const colorFromVar = (varName, alpha = 1) => {
+  if (!varName) return `hsl(var(--muted-foreground) / ${alpha})`;
+  if (varName.startsWith('--')) {
+    return `hsl(var(${varName})${alpha < 1 ? ` / ${alpha}` : ''})`;
+  }
+  return varName;
+};
+
+const getQuality = (score) => {
+  if (score == null) return { colorVar: '--muted-foreground', label: '未評価' };
+  if (score >= 4.5) return { colorVar: '--chart-2', label: 'とても良い' };
+  if (score >= 4) return { colorVar: '--chart-2', label: '良い' };
+  if (score >= 3) return { colorVar: '--chart-4', label: '普通' };
+  if (score >= 2) return { colorVar: '--chart-5', label: '要改善' };
+  return { colorVar: '--destructive', label: '改善が必要' };
+};
+
+const buildHighlightsFromStructure = (structure, inferKind) => {
+  if (!structure) return [];
+  return Object.entries(structure)
+    .map(([key, value]) => {
+      if (!value?.text) return null;
+      const startIndex = Number.isFinite(value.startIndex)
+        ? value.startIndex
+        : Number.isFinite(value.start_index)
+          ? value.start_index
+          : undefined;
+      const endIndex = Number.isFinite(value.endIndex)
+        ? value.endIndex
+        : Number.isFinite(value.end_index)
+          ? value.end_index
+          : undefined;
+      const label = getKindMeta(key, inferKind)?.label || key;
+      return {
+        key,
+        type: label,
+        text: value.text,
+        score: value.score,
+        comment: value.comment ?? value.feedback ?? '',
+        startIndex,
+        endIndex,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (Number.isFinite(a.startIndex) && Number.isFinite(b.startIndex)) {
+        return a.startIndex - b.startIndex;
+      }
+      return 0;
+    });
+};
+
+const getFeedback = (type, score) => {
+  if (score >= 4.5) {
+    return `${type}が明確に表現されています。論理的な構成で優れています。`;
+  } else if (score >= 3.5) {
+    return `${type}は理解できますが、もう少し具体性を持たせると良いでしょう。`;
+  }
+  return `${type}の表現が不明瞭です。より明確に述べることを意識しましょう。`;
+};
+
+const performAnalysis = (inputText, method) => {
+  const sentences = inputText.split('。').filter((s) => s.trim());
+
+  if (method === 'PREP') {
+    const structureAnalysis = {};
+    let currentIndex = 0;
+
+    sentences.forEach((sentence, i) => {
+      const key = i === 0 ? 'point' : i === 1 ? 'reason' : i === 2 ? 'example' : 'repoint';
+      const score = Math.random() * 3 + 2;
+      const segmentText = sentence + '。';
+
+      structureAnalysis[key] = {
+        text: segmentText,
+        score: Math.round(score * 10) / 10,
+        comment: getFeedback(key, score),
+        startIndex: currentIndex,
+        endIndex: currentIndex + segmentText.length,
+      };
+
+      currentIndex += segmentText.length;
+    });
+
+    const highlights = buildHighlightsFromStructure(structureAnalysis, method.toLowerCase());
+
+    return {
+      method: method.toLowerCase(),
+      structureAnalysis,
+      highlights,
+      overallScore: {
+        Point: 4.2,
+        Reason: 3.8,
+        Example: 4.5,
+      },
+      timestamp: Date.now(),
+      originalText: inputText,
+      originalFeedback: 'これはシミュレーションフィードバックです。',
+    };
+  }
+
+  return {
+    method: method.toLowerCase(),
+    structureAnalysis: {},
+    highlights: [],
+    overallScore: {},
+    timestamp: Date.now(),
+    originalText: inputText,
+    originalFeedback: '',
+  };
+};
+
 export function TextEditor({
-  onAnalysisComplete,
+  onAnalysisComplete = () => {},
   currentAnalysis,
   selectedHighlight,
-  onHighlightSelect,
+  onHighlightSelect = () => {},
 }) {
   const [text, setText] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('PREP');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isMobileFeedbackOpen, setIsMobileFeedbackOpen] = useState(false);
+  const [activeKey, setActiveKey] = useState(null);
+  const markRefs = useRef({});
+  const suppressScrollRef = useRef(false);
+  const [showHighlightGuide, setShowHighlightGuide] = useState(false);
 
-  const methods = [
-    { value: 'PREP', label: 'PREP' },
-    { value: 'SDS', label: 'SDS' },
-    { value: 'DESC', label: 'DESC' },
-    { value: 'FTBE', label: 'FTBE' },
-  ];
+  useEffect(() => {
+    if (currentAnalysis && currentAnalysis.structureAnalysis) {
+      const availableKeys = Object.keys(currentAnalysis.structureAnalysis);
+      if (availableKeys.length > 0 && (!activeKey || !availableKeys.includes(activeKey))) {
+        setActiveKey(availableKeys[0]);
+      } else if (availableKeys.length === 0) {
+        setActiveKey(null);
+      }
+    } else {
+      setActiveKey(null);
+    }
+  }, [currentAnalysis]);
 
-  const analyzeText = () => {
-    if (!text.trim()) return;
+  useEffect(() => {
+    if (currentAnalysis && typeof window !== 'undefined') {
+      const seen = window.localStorage.getItem('logipop-highlight-guide');
+      if (!seen) {
+        setShowHighlightGuide(true);
+      }
+    }
+  }, [currentAnalysis]);
+
+  useEffect(() => {
+    if (selectedHighlight?.key) {
+      setActiveKey(selectedHighlight.key);
+      if (!suppressScrollRef.current) {
+        scrollToHighlight(selectedHighlight.key);
+      }
+    } else if (selectedHighlight === null) {
+      setActiveKey(null);
+    }
+    suppressScrollRef.current = false;
+  }, [selectedHighlight]);
+
+
+  const highlightSegments = useMemo(() => {
+    if (!currentAnalysis) return [];
+    const inferKind = currentAnalysis.method?.toLowerCase();
+    const baseText = currentAnalysis.originalText || '';
+    const base = currentAnalysis.highlights && currentAnalysis.highlights.length > 0
+      ? currentAnalysis.highlights
+      : buildHighlightsFromStructure(currentAnalysis.structureAnalysis, inferKind);
+    if (!base?.length) return [];
+
+    const normalized = [];
+    let searchIndex = 0;
+
+    base.forEach((seg, index) => {
+      if (!seg?.text) return;
+      const key = seg.key || (typeof seg.type === 'string' ? seg.type.toLowerCase() : `segment-${index}`);
+      const fallbackStart = baseText.indexOf(seg.text, Math.max(0, searchIndex));
+      const start = Number.isFinite(seg.startIndex) ? seg.startIndex : fallbackStart;
+      const safeStart = start >= 0 ? start : searchIndex;
+      const textLength = seg.text.length;
+      const end = Number.isFinite(seg.endIndex) ? seg.endIndex : safeStart + textLength;
+      searchIndex = end > searchIndex ? end : searchIndex;
+
+      normalized.push({
+        key,
+        type: seg.type || getKindMeta(key, inferKind).label || key,
+        text: seg.text,
+        score: seg.score,
+        comment: seg.comment ?? seg.feedback ?? '',
+        startIndex: safeStart,
+        endIndex: end,
+      });
+    });
+
+    return normalized.sort((a, b) => a.startIndex - b.startIndex);
+  }, [currentAnalysis]);
+
+  useEffect(() => {
+    markRefs.current = {};
+  }, [highlightSegments]);
+
+  const scrollToHighlight = useCallback((key) => {
+    const el = markRefs.current[key];
+    if (el?.scrollIntoView) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }
+  }, []);
+
+  const dismissHighlightGuide = useCallback(() => {
+    setShowHighlightGuide(false);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('logipop-highlight-guide', 'seen');
+    }
+  }, []);
+
+  const selectSegment = useCallback((key, { scroll = false } = {}) => {
+    suppressScrollRef.current = true;
+    if (showHighlightGuide) {
+      dismissHighlightGuide();
+    }
+
+    if (!key) {
+      setActiveKey(null);
+      if (selectedHighlight) {
+        onHighlightSelect(null);
+      }
+      return;
+    }
+
+    const seg = highlightSegments.find((segment) => segment.key === key);
+    if (!seg) {
+      suppressScrollRef.current = false;
+      return;
+    }
+
+    setActiveKey(key);
+    if (!selectedHighlight || selectedHighlight.key !== key) {
+      onHighlightSelect(seg);
+    }
+
+    if (scroll) {
+      scrollToHighlight(key);
+    }
+  }, [dismissHighlightGuide, highlightSegments, onHighlightSelect, scrollToHighlight, selectedHighlight, showHighlightGuide]);
+
+  const activeSegment = currentAnalysis && activeKey
+    ? currentAnalysis.structureAnalysis?.[activeKey]
+    : null;
+  const activeQuality = activeSegment ? getQuality(activeSegment.score) : null;
+  const accentColor = activeQuality ? colorFromVar(activeQuality.colorVar) : 'hsl(var(--chart-2))';
+  const accentSoft = activeQuality ? colorFromVar(activeQuality.colorVar, 0.12) : 'hsl(var(--chart-2) / 0.12)';
+  const accentBorder = activeQuality ? colorFromVar(activeQuality.colorVar, 0.75) : 'hsl(var(--border))';
+
+  const analyzeText = useCallback(() => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
 
     setIsAnalyzing(true);
+    const method = selectedMethod;
 
     // シミュレーション: 実際のAI分析に置き換え
     setTimeout(() => {
-      const analysis = performAnalysis(text, selectedMethod);
+      const analysis = performAnalysis(trimmed, method);
       onAnalysisComplete(analysis);
       setIsAnalyzing(false);
     }, 1500);
-  };
+  }, [onAnalysisComplete, selectedMethod, text]);
 
-  const performAnalysis = (inputText, method) => {
-    // PREP法の例: 文章を自動的に分類
-    const sentences = inputText.split('。').filter(s => s.trim());
-    
-    if (method === 'PREP') {
-      const highlights = [];
-      let currentIndex = 0;
-
-      sentences.forEach((sentence, i) => {
-        const type = i === 0 ? 'Point' : i === 1 ? 'Reason' : i === 2 ? 'Example' : 'Point';
-        const score = Math.random() * 3 + 2; // 2-5点
-        const text = sentence + '。';
-        
-        highlights.push({
-          type,
-          text,
-          score: Math.round(score * 10) / 10,
-          feedback: getFeedback(type, score),
-          startIndex: currentIndex,
-          endIndex: currentIndex + text.length,
-        });
-        
-        currentIndex += text.length;
-      });
-
-      return {
-        method,
-        highlights,
-        overallScore: {
-          Point: 4.2,
-          Reason: 3.8,
-          Example: 4.5,
-        },
-        timestamp: Date.now(),
-        originalText: inputText,
-      };
-    }
-
-    // 他のメソッドも同様に実装
-    return {
-      method,
-      highlights: [],
-      overallScore: {},
-      timestamp: Date.now(),
-      originalText: inputText,
-    };
-  };
-
-  const getFeedback = (type, score) => {
-    if (score >= 4.5) {
-      return `${type}が明確に表現されています。論理的な構成で優れています。`;
-    } else if (score >= 3.5) {
-      return `${type}は理解できますが、もう少し具体性を持たせると良いでしょう。`;
-    } else {
-      return `${type}の表現が不明瞭です。より明確に述べることを意識しましょう。`;
-    }
-  };
-
-  const getHighlightColor = (type) => {
-    const colors = {
-      Point: 'bg-blue-50 hover:bg-blue-100 border-b-2 border-blue-200',
-      Reason: 'bg-emerald-50 hover:bg-emerald-100 border-b-2 border-emerald-200',
-      Example: 'bg-amber-50 hover:bg-amber-100 border-b-2 border-amber-200',
-    };
-    return colors[type] || 'bg-slate-50 hover:bg-slate-100 border-b-2 border-slate-200';
-  };
-
-  const getScoreColor = (score) => {
-    if (score >= 4.5) return 'text-[#34A853]';
-    if (score >= 3.5) return 'text-[#4285F4]';
-    return 'text-[#FBBC04]';
-  };
-
-  const renderTextWithHighlights = () => {
-    if (!currentAnalysis || currentAnalysis.highlights.length === 0) {
+  const renderedText = useMemo(() => {
+    if (!currentAnalysis) {
       return <span className="text-slate-400">{text || 'ここにテキストを入力してください...'}</span>;
     }
 
-    return currentAnalysis.highlights.map((highlight, index) => (
-      <span key={index} className="inline-block">
-        <span
-          className={`
-            ${getHighlightColor(highlight.type)}
-            cursor-pointer transition-colors duration-150
-            ${selectedHighlight === highlight ? 'bg-blue-100 border-blue-400' : ''}
-          `}
-          onClick={() => onHighlightSelect(selectedHighlight === highlight ? null : highlight)}
+    const baseText = currentAnalysis.originalText || text;
+    if (!baseText) {
+      return <span className="text-slate-400">ここにテキストを入力してください...</span>;
+    }
+
+    if (!highlightSegments.length) {
+      return <span className="text-slate-600 whitespace-pre-wrap">{baseText}</span>;
+    }
+
+    const inferKind = currentAnalysis.method;
+    const parts = [];
+    let cursor = 0;
+
+    highlightSegments.forEach((seg, idx) => {
+      const start = Number.isFinite(seg.startIndex) ? seg.startIndex : cursor;
+      const end = Number.isFinite(seg.endIndex) ? seg.endIndex : start + (seg.text?.length ?? 0);
+
+      if (cursor < start) {
+        parts.push(
+          <span key={`plain-${cursor}-${idx}`} className="whitespace-pre-wrap">
+            {baseText.slice(cursor, start)}
+          </span>
+        );
+      }
+
+      const isSelected = selectedHighlight?.key === seg.key;
+      const quality = getQuality(seg.score);
+      const bg = colorFromVar(quality.colorVar, isSelected ? 0.38 : 0.22);
+
+      parts.push(
+        <mark
+          key={`highlight-${seg.key}-${start}`}
+          ref={(el) => {
+            if (el) {
+              markRefs.current[seg.key] = el;
+            }
+          }}
+          onClick={() => selectSegment(isSelected ? null : seg.key)}
+          className="cursor-pointer rounded-sm px-0.5 transition-colors text-[1.15em]"
+          style={{
+            backgroundColor: bg,
+            color: 'inherit',
+            boxShadow: isSelected ? '0 0 0 2px hsl(var(--ring))' : 'none',
+          }}
         >
-          {highlight.text}
+          {seg.text}
+        </mark>
+      );
+
+      cursor = end > cursor ? end : cursor;
+    });
+
+    if (cursor < baseText.length) {
+      parts.push(
+        <span key={`plain-tail-${cursor}`} className="whitespace-pre-wrap">
+          {baseText.slice(cursor)}
         </span>
-        
-        {/* Inline Detail Card */}
-        <AnimatePresence>
-          {selectedHighlight === highlight && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="block mt-4 mb-6 mx-0"
-            >
-              <div className="bg-white rounded-xl p-5 border-2 border-[#4285F4] shadow-lg max-w-2xl">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs px-3 py-1.5 bg-[#4285F4] text-white rounded-md">
-                      {highlight.type}
-                    </span>
-                    <span className={`text-xl ${getScoreColor(highlight.score)}`}>
-                      {highlight.score.toFixed(1)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onHighlightSelect(null);
-                    }}
-                    className="text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-200">
-                  <p className="text-sm text-slate-700 leading-relaxed">
-                    "{highlight.text}"
-                  </p>
-                </div>
-                
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-start gap-2">
-                    <svg className="w-5 h-5 text-[#4285F4] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      {highlight.feedback}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </span>
-    ));
-  };
+      );
+    }
+
+    return parts;
+  }, [currentAnalysis, highlightSegments, selectSegment, selectedHighlight, text]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-white">
@@ -196,7 +386,7 @@ export function TextEditor({
                 onChange={(e) => setSelectedMethod(e.target.value)}
                 className="text-sm text-slate-500 bg-transparent border-none outline-none cursor-pointer hover:text-slate-700 transition-colors"
               >
-                {methods.map((method) => (
+                {METHODS.map((method) => (
                   <option key={method.value} value={method.value}>
                     {method.label}法
                   </option>
@@ -221,8 +411,134 @@ export function TextEditor({
               className="min-h-[500px]"
             >
               <div className="leading-relaxed text-slate-800">
-                {renderTextWithHighlights()}
+                {currentAnalysis && showHighlightGuide && (
+                  <div className="mb-6 rounded-2xl border border-dashed border-[#E0E6FF] bg-[#F5F7FF] px-4 py-3 flex items-start gap-3 text-sm text-slate-700">
+                    <svg className="w-5 h-5 text-[#4285F4] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M4.93 4.93a10 10 0 1114.14 14.14 10 10 0 01-14.14-14.14z" />
+                    </svg>
+                    <div className="flex-1">
+                      文章内のハイライトをクリックすると、下の詳細カードでスコアやコメントを確認できます。
+                    </div>
+                    <button
+                      type="button"
+                      onClick={dismissHighlightGuide}
+                      className="text-xs font-semibold text-[#4285F4] px-2 py-1 rounded-full border border-[#c8d9ff] hover:bg-[#eaf0ff] transition-colors"
+                      aria-label="閉じる"
+                    >
+                      OK
+                    </button>
+                  </div>
+                )}
+                {renderedText}
               </div>
+
+              {/* Detail panel below with switcher */}
+              {currentAnalysis && activeKey && (
+                <div className="mt-8">
+                  <div
+                    className="rounded-[26px] border-2 border-slate-200/50"
+                    style={{ backgroundColor: 'white' }}
+                  >
+                    <div
+                      className="flex gap-2 px-4 pt-2 pb-1"
+                      role="tablist"
+                      aria-label="構造のタブ"
+                      style={{ borderColor: accentBorder }}
+                    >
+                      {Object.entries(currentAnalysis.structureAnalysis).map(([key, seg]) => {
+                        if (!seg?.text) return null;
+                        const meta = getKindMeta(key, currentAnalysis.method);
+                        const isActive = activeKey === key;
+                        const quality = getQuality(seg.score);
+                        const tabColor = colorFromVar(quality.colorVar, 0.75);
+                        return (
+                          <button
+                            key={`tab-${key}`}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            aria-controls={`panel-${key}`}
+                            id={`tab-${key}`}
+                            className={`relative group flex-1 border-2 border-b-0 min-w-0 text-md font-semibold text-center px-4 pt-2 pb-2 rounded-t-lg transition-all whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-100 ${isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                            onClick={() => selectSegment(key, { scroll: true })}
+                            style={{
+                              color: isActive ? tabColor : undefined,
+                              backgroundColor: isActive ? '#fff' : 'transparent',
+                              borderColor: isActive ? tabColor : 'transparent',
+                              borderBottomColor: isActive ? tabColor : 'transparent',
+                              marginBottom: isActive ? '-5.5px' : 0,
+                            }}
+                          >
+                            {meta.label}
+                            {meta.description && (
+                              <span
+                                className="pointer-events-none fixed left-1/2 top-auto bottom-6 z-30 hidden max-w-[90vw] -translate-x-1/2 rounded-md bg-slate-900 px-4 py-2 text-left text-sm font-normal leading-snug text-white opacity-0 shadow-lg ring-1 ring-black/10 transition duration-150 ease-out group-hover:block group-hover:opacity-90 group-focus-visible:block group-focus-visible:opacity-90 md:absolute md:bottom-auto md:left-1/2 md:top-0 md:w-max md:-translate-y-full md:-translate-x-1/2 md:whitespace-normal md:px-3 md:py-1 md:text-xs"
+                                role="tooltip"
+                              >
+                                {meta.description}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div 
+                      className="px-6 py-5 rounded-b-[22px]"
+                      style={{backgroundColor: '#fff', borderColor: accentBorder, borderTopWidth: '2px'}}
+                    >
+                      {(() => {
+                        const seg = currentAnalysis.structureAnalysis[activeKey];
+                        if (!seg) return null;
+                        const meta = getKindMeta(activeKey, currentAnalysis.method);
+                        const quality = getQuality(seg.score);
+                        const color = colorFromVar(quality.colorVar);
+                        return (
+                          <div
+                            className="space-y-5 rounded-[22px] p-6 bg-white"
+                            style={{ borderColor: accentBorder}}
+                          >
+                            <div className="flex flex-wrap items-center gap-3">
+                              <span className="text-lg font-semibold text-slate-900">
+                                スコア <span>{seg.score ?? '-'}</span> / 5
+                              </span>
+                              <span className="text-sm font-medium" style={{ color: accentColor }}>
+                                {quality.label}
+                              </span>
+                            </div>
+                            <div className="space-y-1.5">
+                                <div className="h-1.5 w-full rounded-full bg-[#F6E2D5] overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{ width: `${Math.max(0, Math.min(5, seg.score ?? 0)) / 5 * 100}%`, backgroundColor: color }}
+                                />
+                              </div>
+                              <div className="text-[11px] text-muted-foreground">スコアの目安（0〜5）</div>
+                            </div>
+                            {seg.comment && (
+                              <div className="rounded-2xl border border-[#E0E6FF] bg-[#F5F7FF] p-4">
+                                <div className="flex items-start gap-2">
+                                  <svg className="w-5 h-5 text-[#4285F4] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                  </svg>
+                                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                    {seg.comment}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            <div className="rounded-2xl border border-dashed border-[#F9DCC8] bg-[#FFF8F2] p-4">
+                              <div className="text-xs text-muted-foreground mb-1.5">該当文</div>
+                              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                "{seg.text}"
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -243,23 +559,12 @@ export function TextEditor({
                 </Button>
               ) : (
                 <>
-                  <Button
-                    onClick={() => {
-                      setText('');
-                      onAnalysisComplete(null);
-                      onHighlightSelect(null);
-                    }}
-                    variant="ghost"
-                    className="px-4 py-1.5 rounded-md text-sm text-slate-600"
-                  >
-                    リセット
-                  </Button>
                   {/* Mobile Feedback Button */}
                   <Button
                     onClick={() => setIsMobileFeedbackOpen(true)}
                     className="lg:hidden bg-[#4285F4] hover:bg-[#3367d6] text-white px-5 py-1.5 rounded-md text-sm shadow-sm hover:shadow-md"
                   >
-                    結果を見る
+                    詳細
                   </Button>
                 </>
               )}

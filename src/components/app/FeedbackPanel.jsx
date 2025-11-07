@@ -22,7 +22,7 @@ export function FeedbackPanel({
   const overallAverage = Object.values(analysis.overallScore).reduce((a, b) => a + b, 0) / Object.values(analysis.overallScore).length;
 
   return (
-    <div className="hidden lg:block w-[360px] bg-white border-l border-slate-200/80 overflow-y-auto pb-16">
+    <div className="hidden lg:block w-[480px] bg-white border-l border-slate-200/80 overflow-y-auto pb-16">
       {/* Header */}
       <div className="sticky top-0 bg-white/60 backdrop-blur-md border-b border-slate-200/50 px-5 py-3.5 z-10">
         <h3 className="text-[#0f172a] text-base tracking-tight">フィードバック</h3>

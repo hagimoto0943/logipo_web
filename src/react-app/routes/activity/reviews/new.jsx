@@ -8,12 +8,14 @@ export default function ReviewNew() {
   const reviewApi = new ReviewApi();
 
   const handleAnalysisComplete = async (analysis) => {
+    if (!analysis) return;
+
     const payload = {
       structure_kind: analysis.method,
       original_text: analysis.originalText,
       title: `レビュー ${new Date().toLocaleString()}`,
       result: {
-        structure_analysis: analysis.highlights,
+        structure_analysis: analysis.structureAnalysis,
         score_analysis: {
           score: analysis.overallScore,
         },
