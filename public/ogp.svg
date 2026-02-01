@@ -1,0 +1,34 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#FFF7ED"/>
+  
+  <!-- Icon part -->
+  <!-- Shadow -->
+  <rect x="268" y="153" width="120" height="192" rx="24" fill="#F97316" opacity="0.1"/>
+  
+  <!-- Main document -->
+  <rect x="260" y="145" width="120" height="192" rx="24" stroke="#F97316" stroke-width="10" fill="white"/>
+  
+  <!-- Folded corner -->
+  <path d="M344 145L380 181H350C346.686 181 344 178.314 344 175V145Z" fill="#FED7AA" stroke="#F97316" stroke-width="5"/>
+  
+  <!-- Motion lines -->
+  <line x1="135" y1="205" x2="200" y2="205" stroke="#F97316" stroke-width="12" stroke-linecap="round" opacity="0.4"/>
+  <line x1="120" y1="245" x2="215" y2="245" stroke="#F97316" stroke-width="14" stroke-linecap="round" opacity="0.7"/>
+  <line x1="135" y1="285" x2="200" y2="285" stroke="#F97316" stroke-width="12" stroke-linecap="round" opacity="0.4"/>
+  
+  <!-- Text lines on doc -->
+  <rect x="280" y="195" width="72" height="10" rx="5" fill="#F97316" opacity="0.6"/>
+  <rect x="280" y="226" width="60" height="10" rx="5" fill="#F97316" opacity="0.4"/>
+  <rect x="280" y="257" width="67" height="10" rx="5" fill="#F97316" opacity="0.4"/>
+  <rect x="280" y="288" width="36" height="10" rx="5" fill="#F97316" opacity="0.4"/>
+  
+  <!-- Service name -->
+  <text x="480" y="270" font-family="Arial, sans-serif" font-size="96" font-weight="bold" fill="#F97316">ロジポ</text>
+  
+  <!-- Tagline -->
+  <text x="480" y="340" font-family="Arial, sans-serif" font-size="32" fill="#9CA3AF">文章構成を瞬時にチェック</text>
+  
+  <!-- URL -->
+  <text x="480" y="420" font-family="Arial, sans-serif" font-size="28" fill="#D1D5DB">logipo.jp</text>
+</svg>

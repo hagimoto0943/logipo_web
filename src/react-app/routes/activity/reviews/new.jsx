@@ -1,41 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TextEditor } from "@components/app/TextEditor";
-import ReviewApi from "@api/base/review";
 
 export default function ReviewNew() {
   const navigate = useNavigate();
-  const reviewApi = new ReviewApi();
+  const [currentAnalysis, setCurrentAnalysis] = useState(null);
+  const [selectedHighlight, setSelectedHighlight] = useState(null);
 
-  const handleAnalysisComplete = async (analysis) => {
+  const handleAnalysisComplete = (analysis) => {
     if (!analysis) return;
-
-    const payload = {
-      structure_kind: analysis.method,
-      original_text: analysis.originalText,
-      title: `レビュー ${new Date().toLocaleString()}`,
-      result: {
-        structure_analysis: analysis.structureAnalysis,
-        score_analysis: {
-          score: analysis.overallScore,
-        },
-      },
-    };
-
-    try {
-      const res = await reviewApi.post(payload);
-      const created = res?.data || res;
-      if (created?.id) {
-        navigate(`/app/reviews/${created.id}`);
-      }
-    } catch (error) {
-      console.error("Failed to save the review:", error);
-    }
+    
+    // 分析結果をセット（TextEditorで表示）
+    setCurrentAnalysis(analysis);
+    
+    // IDがあれば詳細ページに遷移可能（オプション）
+    // navigate(`/app/reviews/${analysis.id}`);
   };
 
   return (
-    <div className="w-full">
-      <TextEditor onAnalysisComplete={handleAnalysisComplete} />
+    <div className="w-full h-full">
+      <TextEditor 
+        onAnalysisComplete={handleAnalysisComplete}
+        currentAnalysis={currentAnalysis}
+        selectedHighlight={selectedHighlight}
+        onHighlightSelect={setSelectedHighlight}
+      />
     </div>
   );
 }

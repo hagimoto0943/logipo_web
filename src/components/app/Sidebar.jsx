@@ -1,8 +1,15 @@
-import { LayoutDashboard, PenTool, History, User, PanelLeftClose, PanelLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useState } from 'react';
-import LogoIcon from './LogoIcon';
-import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  PenTool,
+  History,
+  User,
+  PanelLeftClose,
+  PanelLeft,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { useState } from "react";
+import LogoIcon from "./LogoIcon";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export function AppSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -14,16 +21,28 @@ export function AppSidebar() {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'ダッシュボード', path: '/app/dashboard' },
-    { id: 'editor', icon: PenTool, label: '新規作成', path: '/app/reviews/new' },
-    { id: 'history', icon: History, label: '履歴', path: '/app/reviews' },
-    { id: 'account', icon: User, label: 'アカウント', path: '/app/account' },
+    {
+      id: "dashboard",
+      icon: LayoutDashboard,
+      label: "ダッシュボード",
+      path: "/app/dashboard",
+    },
+    {
+      id: "editor",
+      icon: PenTool,
+      label: "新規作成",
+      path: "/app/reviews/new",
+    },
+    { id: "history", icon: History, label: "履歴", path: "/app/reviews" },
+    { id: "account", icon: User, label: "アカウント", path: "/app/account" },
   ];
 
-  const currentView = menuItems.find(item => location.pathname.startsWith(item.path))?.id || 'dashboard';
+  const currentView =
+    menuItems.find((item) => location.pathname.startsWith(item.path))?.id ||
+    "dashboard";
 
   return (
-    <motion.div 
+    <motion.div
       initial={false}
       animate={{ width: isCollapsed ? 64 : 224 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
@@ -31,18 +50,23 @@ export function AppSidebar() {
     >
       {/* Header */}
       <div className="px-4 py-6 border-b border-slate-200/80">
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2.5'}`}>
-          <div className="w-7 h-7 flex-shrink-0" style={{ 
-            '--fill-0': '#2C5067',
-            '--stroke-0': '#2C5067',
-          }}>
+        <div
+          className={`flex items-center ${isCollapsed ? "justify-center" : "gap-2.5"}`}
+        >
+          <div
+            className="w-7 h-7 flex-shrink-0"
+            style={{
+              "--fill-0": "#2C5067",
+              "--stroke-0": "#2C5067",
+            }}
+          >
             <LogoIcon />
           </div>
           <AnimatePresence>
             {!isCollapsed && (
-              <motion.h1 
+              <motion.h1
                 initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
+                animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.2 }}
                 className="text-[#0f172a] text-base whitespace-nowrap overflow-hidden"
@@ -60,16 +84,17 @@ export function AppSidebar() {
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
-            
+
             return (
               <button
                 key={item.id}
                 onClick={() => navigate(item.path)}
                 className={`
-                  w-full flex items-center ${isCollapsed ? 'justify-center px-3' : 'gap-2.5 px-3'} py-2 rounded-md transition-colors text-sm relative group
-                  ${isActive 
-                    ? 'text-[#0f172a] bg-white shadow-sm' 
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  w-full flex items-center ${isCollapsed ? "justify-center px-3" : "gap-2.5 px-3"} py-2 rounded-md transition-colors text-sm relative group
+                  ${
+                    isActive
+                      ? "text-[#0f172a] bg-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
                   }
                 `}
                 title={isCollapsed ? item.label : undefined}
@@ -77,9 +102,9 @@ export function AppSidebar() {
                 <Icon className="w-[18px] h-[18px] flex-shrink-0 stroke-[1.5]" />
                 <AnimatePresence>
                   {!isCollapsed && (
-                    <motion.span 
+                    <motion.span
                       initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: 'auto' }}
+                      animate={{ opacity: 1, width: "auto" }}
                       exit={{ opacity: 0, width: 0 }}
                       transition={{ duration: 0.2 }}
                       className="text-[13px] whitespace-nowrap overflow-hidden"
@@ -88,7 +113,7 @@ export function AppSidebar() {
                     </motion.span>
                   )}
                 </AnimatePresence>
-                
+
                 {/* Tooltip for collapsed state */}
                 {isCollapsed && (
                   <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
@@ -106,10 +131,12 @@ export function AppSidebar() {
         <button
           onClick={handleToggleCollapse}
           className={`
-            w-full flex items-center ${isCollapsed ? 'justify-center px-3' : 'gap-2.5 px-3'} py-2 rounded-md transition-colors text-sm group
+            w-full flex items-center ${isCollapsed ? "justify-center px-3" : "gap-2.5 px-3"} py-2 rounded-md transition-colors text-sm group
             text-slate-500 hover:text-slate-700 hover:bg-white/50
           `}
-          title={isCollapsed ? (isCollapsed ? '展開' : '折りたたむ') : undefined}
+          title={
+            isCollapsed ? (isCollapsed ? "展開" : "折りたたむ") : undefined
+          }
         >
           {isCollapsed ? (
             <PanelLeft className="w-[18px] h-[18px] flex-shrink-0" />
@@ -118,9 +145,9 @@ export function AppSidebar() {
           )}
           <AnimatePresence>
             {!isCollapsed && (
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
+                animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.2 }}
                 className="text-[13px] whitespace-nowrap overflow-.hidden"
@@ -129,7 +156,7 @@ export function AppSidebar() {
               </motion.span>
             )}
           </AnimatePresence>
-          
+
           {/* Tooltip for collapsed state */}
           {isCollapsed && (
             <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">

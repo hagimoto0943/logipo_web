@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@components/ui/button';
 import { motion } from 'motion/react';
 import { MobileFeedbackSheet } from '@components/app/MobileFeedbackSheet';
+import ReviewApi from '@api/base/review';
 
 const STRUCTURE_CONFIG = {
   prep: [
@@ -21,13 +22,18 @@ const STRUCTURE_CONFIG = {
     { key: 'suggest', label: 'S', description: '提案（Suggest）を示す部分です。', colorVar: '--chart-2' },
     { key: 'choose', label: 'C', description: '選択（Choose）を示す部分です。', colorVar: '--chart-3' },
   ],
+  free: [
+    { key: 'overall', label: 'O', description: '全体（Overall）の評価です。', colorVar: '--chart-1' },
+    { key: 'clarity', label: 'C', description: '明確性（Clarity）を示す部分です。', colorVar: '--chart-2' },
+    { key: 'impression', label: 'I', description: '印象（Impression）を示す部分です。', colorVar: '--chart-3' },
+  ],
 };
 
 const METHODS = [
-  { value: 'PREP', label: 'PREP' },
-  { value: 'SDS', label: 'SDS' },
-  { value: 'DESC', label: 'DESC' },
-  { value: 'FTBE', label: 'FTBE' },
+  { value: 'prep', label: 'PREP' },
+  { value: 'sds', label: 'SDS' },
+  { value: 'desc', label: 'DESC' },
+  { value: 'free', label: 'FREE' },
 ];
 
 const getKindMeta = (key, inferKind) => {
@@ -87,63 +93,24 @@ const buildHighlightsFromStructure = (structure, inferKind) => {
     });
 };
 
-const getFeedback = (type, score) => {
-  if (score >= 4.5) {
-    return `${type}が明確に表現されています。論理的な構成で優れています。`;
-  } else if (score >= 3.5) {
-    return `${type}は理解できますが、もう少し具体性を持たせると良いでしょう。`;
-  }
-  return `${type}の表現が不明瞭です。より明確に述べることを意識しましょう。`;
-};
-
-const performAnalysis = (inputText, method) => {
-  const sentences = inputText.split('。').filter((s) => s.trim());
-
-  if (method === 'PREP') {
-    const structureAnalysis = {};
-    let currentIndex = 0;
-
-    sentences.forEach((sentence, i) => {
-      const key = i === 0 ? 'point' : i === 1 ? 'reason' : i === 2 ? 'example' : 'repoint';
-      const score = Math.random() * 3 + 2;
-      const segmentText = sentence + '。';
-
-      structureAnalysis[key] = {
-        text: segmentText,
-        score: Math.round(score * 10) / 10,
-        comment: getFeedback(key, score),
-        startIndex: currentIndex,
-        endIndex: currentIndex + segmentText.length,
-      };
-
-      currentIndex += segmentText.length;
-    });
-
-    const highlights = buildHighlightsFromStructure(structureAnalysis, method.toLowerCase());
-
-    return {
-      method: method.toLowerCase(),
-      structureAnalysis,
-      highlights,
-      overallScore: {
-        Point: 4.2,
-        Reason: 3.8,
-        Example: 4.5,
-      },
-      timestamp: Date.now(),
-      originalText: inputText,
-      originalFeedback: 'これはシミュレーションフィードバックです。',
-    };
-  }
-
+// APIレスポンスをTextEditor用のフォーマットに変換
+const normalizeApiResponse = (apiResponse) => {
+  if (!apiResponse) return null;
+  
+  const result = apiResponse.result || {};
+  const structureKind = apiResponse.structure_kind || result.structure_kind || 'prep';
+  const structureAnalysis = result.structure_analysis || {};
+  
   return {
-    method: method.toLowerCase(),
-    structureAnalysis: {},
-    highlights: [],
-    overallScore: {},
-    timestamp: Date.now(),
-    originalText: inputText,
-    originalFeedback: '',
+    id: apiResponse.id,
+    method: structureKind,
+    originalText: apiResponse.original_text,
+    structureAnalysis: structureAnalysis,
+    scoreAnalysis: result.score_analysis,
+    feedback: result.feedback,
+    originalFeedback: result.original_feedback,
+    modelText: result.model_text,
+    highlights: buildHighlightsFromStructure(structureAnalysis, structureKind),
   };
 };
 
@@ -154,8 +121,9 @@ export function TextEditor({
   onHighlightSelect = () => {},
 }) {
   const [text, setText] = useState('');
-  const [selectedMethod, setSelectedMethod] = useState('PREP');
+  const [selectedMethod, setSelectedMethod] = useState('prep');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState(null);
   const [isMobileFeedbackOpen, setIsMobileFeedbackOpen] = useState(false);
   const [activeKey, setActiveKey] = useState(null);
   const markRefs = useRef({});
@@ -289,19 +257,32 @@ export function TextEditor({
   const accentSoft = activeQuality ? colorFromVar(activeQuality.colorVar, 0.12) : 'hsl(var(--chart-2) / 0.12)';
   const accentBorder = activeQuality ? colorFromVar(activeQuality.colorVar, 0.75) : 'hsl(var(--border))';
 
-  const analyzeText = useCallback(() => {
+  const analyzeText = useCallback(async () => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
     setIsAnalyzing(true);
-    const method = selectedMethod;
+    setError(null);
 
-    // シミュレーション: 実際のAI分析に置き換え
-    setTimeout(() => {
-      const analysis = performAnalysis(trimmed, method);
-      onAnalysisComplete(analysis);
+    try {
+      const reviewApi = new ReviewApi();
+      const response = await reviewApi.post({
+        original_text: trimmed,
+        structure: selectedMethod,
+      });
+      
+      const apiData = response?.data || response;
+      const normalizedAnalysis = normalizeApiResponse(apiData);
+      
+      if (normalizedAnalysis) {
+        onAnalysisComplete(normalizedAnalysis);
+      }
+    } catch (err) {
+      console.error('Analysis failed:', err);
+      setError(err?.message || '分析に失敗しました。もう一度お試しください。');
+    } finally {
       setIsAnalyzing(false);
-    }, 1500);
+    }
   }, [onAnalysisComplete, selectedMethod, text]);
 
   const renderedText = useMemo(() => {
@@ -399,7 +380,10 @@ export function TextEditor({
           {!currentAnalysis ? (
             <textarea
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => {
+                setText(e.target.value);
+                setError(null);
+              }}
               placeholder="文章を入力してください..."
               className="w-full min-h-[500px] bg-transparent border-none focus:outline-none resize-none text-slate-800 placeholder:text-slate-300"
               autoFocus
@@ -482,7 +466,7 @@ export function TextEditor({
                         );
                       })}
                     </div>
-                    <div 
+                    <div
                       className="px-6 py-5 rounded-b-[22px]"
                       style={{backgroundColor: '#fff', borderColor: accentBorder, borderTopWidth: '2px'}}
                     >
@@ -542,12 +526,19 @@ export function TextEditor({
             </motion.div>
           )}
 
+          {/* Error Message */}
+          {error && (
+            <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Action Bar - Inline at bottom */}
           <div className="mt-8 pt-4 border-t border-slate-200/80 flex items-center justify-between">
             <div className="text-xs text-slate-400">
               {text.length} 文字
             </div>
-            
+
             <div className="flex gap-2">
               {!currentAnalysis ? (
                 <Button
@@ -555,7 +546,7 @@ export function TextEditor({
                   disabled={!text.trim() || isAnalyzing}
                   className="bg-[#4285F4] hover:bg-[#3367d6] text-white px-5 py-1.5 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm shadow-sm hover:shadow-md"
                 >
-                  {isAnalyzing ? '分析中...' : '分析'}
+                  {isAnalyzing ? '分析中...' : '分析する'}
                 </Button>
               ) : (
                 <>
